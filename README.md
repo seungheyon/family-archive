@@ -6,3 +6,13 @@
 `seungheyon-wiki/projects/concepts/프로젝트_가족아카이브.md`
 
 이 저장소에는 코드만 둔다. 설계 논의나 새로운 결정 사항은 위키의 `project-log` 스킬로 기록한다.
+
+배포 대상은 Cloudflare Workers(OpenNext 어댑터, Pages 아님) + R2 + Supabase(Postgres)다.
+
+## 개발
+
+```bash
+npm run dev
+```
+
+[http://localhost:3000](http://localhost:3000)에서 확인. `create-next-app`(TypeScript, App Router, Tailwind, ESLint)으로 스캐폴딩됨.
