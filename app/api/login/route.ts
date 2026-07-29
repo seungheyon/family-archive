@@ -8,14 +8,21 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const password = formData.get("password");
 
-  if (typeof password !== "string" || password !== env.SITE_PASSWORD) {
+  const role =
+    typeof password === "string" && password === env.ADMIN_PASSWORD
+      ? "admin"
+      : typeof password === "string" && password === env.SITE_PASSWORD
+        ? "family"
+        : null;
+
+  if (!role) {
     return new Response(null, {
       status: 302,
       headers: { Location: "/login?error=1" },
     });
   }
 
-  const token = await createSessionToken(env.SESSION_SECRET);
+  const token = await createSessionToken(env.SESSION_SECRET, role);
 
   return new Response(null, {
     status: 302,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { isAdmin } from "@/lib/auth";
 import { DeleteButton } from "@/components/DeleteButton";
 
 interface PhotoRow {
@@ -17,6 +18,7 @@ export default async function PhotoDetailPage({
   const { id: albumId, photoId } = await params;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
+  const admin = await isAdmin(env.SESSION_SECRET);
 
   const { data: album } = await supabase
     .from("albums")
@@ -85,14 +87,18 @@ export default async function PhotoDetailPage({
           <span />
         )}
 
-        <form action={`/api/photos/${current.id}/delete`} method="POST">
-          <input
-            type="hidden"
-            name="redirect_to"
-            value={`/albums/${albumId}`}
-          />
-          <DeleteButton label="이 사진 삭제" />
-        </form>
+        {admin ? (
+          <form action={`/api/photos/${current.id}/delete`} method="POST">
+            <input
+              type="hidden"
+              name="redirect_to"
+              value={`/albums/${albumId}`}
+            />
+            <DeleteButton label="이 사진 삭제" />
+          </form>
+        ) : (
+          <span />
+        )}
 
         {next ? (
           <Link

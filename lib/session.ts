@@ -28,9 +28,18 @@ function timingSafeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
-export async function createSessionToken(secret: string): Promise<string> {
+export type SessionRole = "admin" | "family";
+
+export interface Session {
+  role: SessionRole;
+}
+
+export async function createSessionToken(
+  secret: string,
+  role: SessionRole,
+): Promise<string> {
   const expiresAt = Date.now() + SESSION_DURATION_MS;
-  const payload = String(expiresAt);
+  const payload = `${expiresAt}.${role}`;
   const sig = await hmacHex(secret, payload);
   return `${payload}.${sig}`;
 }
@@ -38,16 +47,19 @@ export async function createSessionToken(secret: string): Promise<string> {
 export async function verifySessionToken(
   token: string | undefined,
   secret: string,
-): Promise<boolean> {
-  if (!token) return false;
-  const [payload, sig] = token.split(".");
-  if (!payload || !sig) return false;
+): Promise<Session | null> {
+  if (!token) return null;
+  const [expiresAtRaw, role, sig] = token.split(".");
+  if (!expiresAtRaw || !role || !sig) return null;
 
+  const payload = `${expiresAtRaw}.${role}`;
   const expected = await hmacHex(secret, payload);
-  if (!timingSafeEqual(sig, expected)) return false;
+  if (!timingSafeEqual(sig, expected)) return null;
 
-  const expiresAt = Number(payload);
-  if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return false;
+  const expiresAt = Number(expiresAtRaw);
+  if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return null;
 
-  return true;
+  if (role !== "admin" && role !== "family") return null;
+
+  return { role };
 }

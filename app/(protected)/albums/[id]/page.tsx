@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { isAdmin } from "@/lib/auth";
 import { DeleteButton } from "@/components/DeleteButton";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 
@@ -21,6 +22,7 @@ export default async function AlbumDetailPage({
   const { msg, count } = await searchParams;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
+  const admin = await isAdmin(env.SESSION_SECRET);
 
   const { data: album } = await supabase
     .from("albums")
@@ -69,17 +71,23 @@ export default async function AlbumDetailPage({
                 className="aspect-square w-full rounded-md object-cover"
               />
             </Link>
-            <form
-              action={`/api/photos/${photo.id}/delete`}
-              method="POST"
-              className="absolute right-1 top-1"
-            >
-              <input type="hidden" name="redirect_to" value={`/albums/${id}`} />
-              <DeleteButton
-                label="✕"
-                className="rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
-              />
-            </form>
+            {admin && (
+              <form
+                action={`/api/photos/${photo.id}/delete`}
+                method="POST"
+                className="absolute right-1 top-1"
+              >
+                <input
+                  type="hidden"
+                  name="redirect_to"
+                  value={`/albums/${id}`}
+                />
+                <DeleteButton
+                  label="✕"
+                  className="rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
+                />
+              </form>
+            )}
           </div>
         ))}
       </div>

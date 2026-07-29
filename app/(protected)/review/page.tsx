@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { isAdmin } from "@/lib/auth";
 import { DeleteButton } from "@/components/DeleteButton";
 import { AlbumTitleForm } from "@/components/AlbumTitleForm";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
@@ -31,6 +32,7 @@ export default async function ReviewPage({
   const { msg, count } = await searchParams;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
+  const admin = await isAdmin(env.SESSION_SECRET);
 
   const [{ data: albums }, { data: unassigned }] = await Promise.all([
     supabase
@@ -140,10 +142,12 @@ export default async function ReviewPage({
                   선택한 앨범으로 옮기기
                 </button>
               </form>
-              <form action={`/api/photos/${photo.id}/delete`} method="POST">
-                <input type="hidden" name="redirect_to" value="/review" />
-                <DeleteButton />
-              </form>
+              {admin && (
+                <form action={`/api/photos/${photo.id}/delete`} method="POST">
+                  <input type="hidden" name="redirect_to" value="/review" />
+                  <DeleteButton />
+                </form>
+              )}
             </li>
           ))}
           {(!unassigned || unassigned.length === 0) && (
