@@ -1,5 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { DeleteButton } from "@/components/DeleteButton";
 
 interface AlbumRow {
   id: string;
@@ -125,6 +126,10 @@ export default async function ReviewPage() {
                 >
                   배정
                 </button>
+              </form>
+              <form action={`/api/photos/${photo.id}/delete`} method="POST">
+                <input type="hidden" name="redirect_to" value="/review" />
+                <DeleteButton />
               </form>
             </li>
           ))}

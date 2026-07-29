@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { DeleteButton } from "@/components/DeleteButton";
 
 interface PhotoRow {
   id: string;
@@ -52,14 +53,26 @@ export default async function AlbumDetailPage({
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
         {photos?.map((photo) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={photo.id}
-            src={`/api/photos/${photo.id}/file`}
-            alt=""
-            loading="lazy"
-            className="aspect-square w-full rounded-md object-cover"
-          />
+          <div key={photo.id} className="group relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/api/photos/${photo.id}/file`}
+              alt=""
+              loading="lazy"
+              className="aspect-square w-full rounded-md object-cover"
+            />
+            <form
+              action={`/api/photos/${photo.id}/delete`}
+              method="POST"
+              className="absolute right-1 top-1"
+            >
+              <input type="hidden" name="redirect_to" value={`/albums/${id}`} />
+              <DeleteButton
+                label="✕"
+                className="rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
+              />
+            </form>
+          </div>
         ))}
       </div>
     </div>
