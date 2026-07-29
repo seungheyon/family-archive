@@ -1,9 +1,15 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { clusterPhotosByDate } from "@/lib/classify";
+import { isAuthenticated } from "@/lib/auth";
 
 export async function POST() {
   const { env } = await getCloudflareContext({ async: true });
+
+  if (!(await isAuthenticated(env.SESSION_SECRET))) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   const supabase = createServerSupabaseClient(env);
 
   const { data: photos, error } = await supabase
