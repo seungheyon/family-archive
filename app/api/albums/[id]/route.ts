@@ -21,5 +21,8 @@ export async function POST(
     await supabase.from("albums").update({ title: title.trim() }).eq("id", id);
   }
 
-  return new Response(null, { status: 302, headers: { Location: "/review" } });
+  return new Response(null, {
+    status: 302,
+    headers: { Location: "/review?msg=renamed" },
+  });
 }

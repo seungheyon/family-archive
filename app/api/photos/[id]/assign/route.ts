@@ -22,5 +22,8 @@ export async function POST(
     .update({ album_id: typeof albumId === "string" && albumId ? albumId : null })
     .eq("id", id);
 
-  return new Response(null, { status: 302, headers: { Location: "/review" } });
+  return new Response(null, {
+    status: 302,
+    headers: { Location: "/review?msg=assigned" },
+  });
 }

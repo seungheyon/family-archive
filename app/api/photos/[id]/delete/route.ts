@@ -28,10 +28,11 @@ export async function POST(
     await supabase.from("photos").delete().eq("id", id);
   }
 
-  const location =
+  const base =
     typeof redirectTo === "string" && redirectTo.startsWith("/")
       ? redirectTo
       : "/review";
+  const location = `${base}${base.includes("?") ? "&" : "?"}msg=deleted`;
 
   return new Response(null, { status: 302, headers: { Location: location } });
 }

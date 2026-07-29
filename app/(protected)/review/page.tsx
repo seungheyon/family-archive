@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { DeleteButton } from "@/components/DeleteButton";
+import { AlbumTitleForm } from "@/components/AlbumTitleForm";
+import { FeedbackBanner } from "@/components/FeedbackBanner";
+
+export const metadata: Metadata = {
+  title: "앨범 정리",
+};
 
 interface AlbumRow {
   id: string;
@@ -16,7 +23,12 @@ interface UnassignedPhotoRow {
   taken_at: string | null;
 }
 
-export default async function ReviewPage() {
+export default async function ReviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ msg?: string; count?: string }>;
+}) {
+  const { msg, count } = await searchParams;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
 
@@ -40,6 +52,8 @@ export default async function ReviewPage() {
         앨범 정리
       </h1>
 
+      <FeedbackBanner msg={msg} count={count} />
+
       <form action="/api/albums/auto-classify" method="POST" className="mb-10">
         <button
           type="submit"
@@ -47,6 +61,10 @@ export default async function ReviewPage() {
         >
           미분류 사진 자동 분류 실행
         </button>
+        <p className="mt-2 text-xs text-zinc-500">
+          촬영일자(EXIF)가 있는 미분류 사진을 날짜 간격 기준으로 앨범으로
+          묶어요. 촬영일자가 없는 사진은 아래에서 직접 배정해야 해요.
+        </p>
       </form>
 
       <section className="mb-10">
@@ -57,29 +75,14 @@ export default async function ReviewPage() {
           {albums?.map((album) => (
             <li
               key={album.id}
-              className="rounded-md border border-black/10 p-4 dark:border-white/10"
+              className="flex items-center gap-2 rounded-md border border-black/10 p-4 dark:border-white/10"
             >
-              <form
-                action={`/api/albums/${album.id}`}
-                method="POST"
-                className="flex items-center gap-2"
-              >
-                <input
-                  type="text"
-                  name="title"
-                  defaultValue={album.title}
-                  className="flex-1 rounded-md border border-black/10 bg-transparent px-2 py-1 dark:border-white/10"
-                />
-                <span className="text-sm text-zinc-500">
-                  사진 {album.photos?.[0]?.count ?? 0}장
-                </span>
-                <button
-                  type="submit"
-                  className="rounded-full border border-black/10 px-3 py-1 text-sm dark:border-white/10"
-                >
-                  저장
-                </button>
-              </form>
+              <div className="flex-1">
+                <AlbumTitleForm albumId={album.id} initialTitle={album.title} />
+              </div>
+              <span className="text-sm text-zinc-500">
+                사진 {album.photos?.[0]?.count ?? 0}장
+              </span>
             </li>
           ))}
           {(!albums || albums.length === 0) && (
@@ -111,9 +114,13 @@ export default async function ReviewPage() {
               >
                 <select
                   name="album_id"
+                  required
+                  defaultValue=""
                   className="rounded-md border border-black/10 bg-transparent px-2 py-1 dark:border-white/10"
                 >
-                  <option value="">앨범 선택</option>
+                  <option value="" disabled hidden>
+                    앨범을 선택하세요
+                  </option>
                   {albums?.map((album) => (
                     <option key={album.id} value={album.id}>
                       {album.title}
@@ -122,9 +129,15 @@ export default async function ReviewPage() {
                 </select>
                 <button
                   type="submit"
-                  className="rounded-full border border-black/10 px-3 py-1 text-sm dark:border-white/10"
+                  disabled={!albums || albums.length === 0}
+                  title={
+                    !albums || albums.length === 0
+                      ? "먼저 앨범을 만들어야 배정할 수 있어요"
+                      : "선택한 앨범으로 이 사진 옮기기"
+                  }
+                  className="rounded-full border border-black/10 px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10"
                 >
-                  배정
+                  선택한 앨범으로 옮기기
                 </button>
               </form>
               <form action={`/api/photos/${photo.id}/delete`} method="POST">

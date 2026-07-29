@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
+
+export const metadata: Metadata = {
+  title: "앨범 목록",
+};
 
 interface AlbumRow {
   id: string;
@@ -26,7 +31,7 @@ export default async function AlbumListPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="mb-8 text-2xl font-semibold text-black dark:text-zinc-50">
-        가족 아카이브
+        앨범 목록
       </h1>
 
       {visibleAlbums.length === 0 && (

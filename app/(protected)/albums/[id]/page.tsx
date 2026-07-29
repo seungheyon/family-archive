@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { DeleteButton } from "@/components/DeleteButton";
+import { FeedbackBanner } from "@/components/FeedbackBanner";
 
 interface PhotoRow {
   id: string;
@@ -11,10 +12,13 @@ interface PhotoRow {
 
 export default async function AlbumDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ msg?: string; count?: string }>;
 }) {
   const { id } = await params;
+  const { msg, count } = await searchParams;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
 
@@ -47,6 +51,8 @@ export default async function AlbumDetailPage({
         {album.title}
       </h1>
 
+      <FeedbackBanner msg={msg} count={count} />
+
       {(!photos || photos.length === 0) && (
         <p className="text-sm text-zinc-500">이 앨범엔 아직 사진이 없어요.</p>
       )}
@@ -54,13 +60,15 @@ export default async function AlbumDetailPage({
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
         {photos?.map((photo) => (
           <div key={photo.id} className="group relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/api/photos/${photo.id}/file`}
-              alt=""
-              loading="lazy"
-              className="aspect-square w-full rounded-md object-cover"
-            />
+            <Link href={`/albums/${id}/photos/${photo.id}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/photos/${photo.id}/file`}
+                alt=""
+                loading="lazy"
+                className="aspect-square w-full rounded-md object-cover"
+              />
+            </Link>
             <form
               action={`/api/photos/${photo.id}/delete`}
               method="POST"

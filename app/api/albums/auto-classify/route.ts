@@ -50,5 +50,10 @@ export async function POST() {
       .in("id", cluster.photoIds);
   }
 
-  return new Response(null, { status: 302, headers: { Location: "/review" } });
+  const location =
+    clusters.length === 0
+      ? "/review?msg=classify-empty"
+      : `/review?msg=classified&count=${clusters.length}`;
+
+  return new Response(null, { status: 302, headers: { Location: location } });
 }
