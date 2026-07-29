@@ -31,8 +31,11 @@ export default async function AlbumListPage() {
 
       {visibleAlbums.length === 0 && (
         <p className="text-sm text-zinc-500">
-          아직 정리된 앨범이 없어요. 관리자가 사진을 업로드하고 정리하면
-          여기에 나타나요.
+          아직 정리된 앨범이 없어요. 관리자라면{" "}
+          <Link href="/upload" className="underline">
+            사진을 업로드
+          </Link>
+          하고 정리하면 여기에 나타나요.
         </p>
       )}
 
