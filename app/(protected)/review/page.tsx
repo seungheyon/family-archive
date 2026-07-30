@@ -50,61 +50,52 @@ export default async function ReviewPage({
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="mb-6 text-2xl font-semibold text-black dark:text-zinc-50">
+      <h1 className="mb-6 text-2xl font-semibold text-foreground">
         앨범 정리
       </h1>
 
       <FeedbackBanner msg={msg} count={count} />
 
       <form action="/api/albums/auto-classify" method="POST" className="mb-10">
-        <button
-          type="submit"
-          className="rounded-full bg-black px-4 py-2 text-white dark:bg-white dark:text-black"
-        >
+        <button type="submit" className="btn-primary">
           미분류 사진 자동 분류 실행
         </button>
-        <p className="mt-2 text-xs text-zinc-500">
+        <p className="mt-2 text-xs text-muted">
           촬영일자(EXIF)가 있는 미분류 사진을 날짜 간격 기준으로 앨범으로
           묶어요. 촬영일자가 없는 사진은 아래에서 직접 배정해야 해요.
         </p>
       </form>
 
       <section className="mb-10">
-        <h2 className="mb-3 text-lg font-medium text-black dark:text-zinc-50">
+        <h2 className="mb-3 text-lg font-medium text-foreground">
           앨범 ({albums?.length ?? 0})
         </h2>
         <ul className="flex flex-col gap-3">
           {albums?.map((album) => (
-            <li
-              key={album.id}
-              className="flex items-center gap-2 rounded-md border border-black/10 p-4 dark:border-white/10"
-            >
+            <li key={album.id} className="card flex items-center gap-2">
               <div className="flex-1">
                 <AlbumTitleForm albumId={album.id} initialTitle={album.title} />
               </div>
-              <span className="text-sm text-zinc-500">
+              <span className="text-sm text-muted">
                 사진 {album.photos?.[0]?.count ?? 0}장
               </span>
             </li>
           ))}
           {(!albums || albums.length === 0) && (
-            <p className="text-sm text-zinc-500">아직 앨범이 없어요.</p>
+            <p className="text-sm text-muted">아직 앨범이 없어요.</p>
           )}
         </ul>
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-medium text-black dark:text-zinc-50">
+        <h2 className="mb-3 text-lg font-medium text-foreground">
           미분류 사진 ({unassigned?.length ?? 0})
         </h2>
         <ul className="flex flex-col gap-3">
           {unassigned?.map((photo) => (
-            <li
-              key={photo.id}
-              className="flex items-center gap-2 rounded-md border border-black/10 p-3 text-sm dark:border-white/10"
-            >
+            <li key={photo.id} className="card flex items-center gap-2 text-sm">
               <span className="flex-1">{photo.original_filename}</span>
-              <span className="text-zinc-500">
+              <span className="text-muted">
                 {photo.taken_at
                   ? new Date(photo.taken_at).toLocaleDateString("ko-KR")
                   : "촬영일자 없음"}
@@ -118,7 +109,7 @@ export default async function ReviewPage({
                   name="album_id"
                   required
                   defaultValue=""
-                  className="rounded-md border border-black/10 bg-transparent px-2 py-1 dark:border-white/10"
+                  className="input py-1"
                 >
                   <option value="" disabled hidden>
                     앨범을 선택하세요
@@ -137,7 +128,7 @@ export default async function ReviewPage({
                       ? "먼저 앨범을 만들어야 배정할 수 있어요"
                       : "선택한 앨범으로 이 사진 옮기기"
                   }
-                  className="rounded-full border border-black/10 px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10"
+                  className="btn-outline px-3 py-1"
                 >
                   선택한 앨범으로 옮기기
                 </button>
@@ -151,7 +142,7 @@ export default async function ReviewPage({
             </li>
           ))}
           {(!unassigned || unassigned.length === 0) && (
-            <p className="text-sm text-zinc-500">미분류 사진이 없어요.</p>
+            <p className="text-sm text-muted">미분류 사진이 없어요.</p>
           )}
         </ul>
       </section>

@@ -53,11 +53,11 @@ export default async function PhotoDetailPage({
       <div className="mb-4 flex w-full items-center justify-between text-sm">
         <Link
           href={`/albums/${albumId}`}
-          className="text-zinc-500 hover:underline"
+          className="text-muted hover:text-accent"
         >
           ← {album.title}
         </Link>
-        <span className="text-zinc-500">
+        <span className="text-muted">
           {index + 1} / {list.length}
         </span>
       </div>
@@ -66,10 +66,10 @@ export default async function PhotoDetailPage({
       <img
         src={`/api/photos/${current.id}/file`}
         alt=""
-        className="max-h-[70vh] w-auto rounded-md object-contain"
+        className="max-h-[70vh] w-auto rounded-xl object-contain"
       />
 
-      <p className="mt-3 text-sm text-zinc-500">
+      <p className="mt-3 text-sm text-muted">
         {current.taken_at
           ? new Date(current.taken_at).toLocaleString("ko-KR")
           : "촬영일자 정보 없음"}
@@ -77,10 +77,7 @@ export default async function PhotoDetailPage({
 
       <div className="mt-6 flex w-full items-center justify-between">
         {prev ? (
-          <Link
-            href={`/albums/${albumId}/photos/${prev.id}`}
-            className="rounded-full border border-black/10 px-4 py-2 text-sm dark:border-white/10"
-          >
+          <Link href={`/albums/${albumId}/photos/${prev.id}`} className="btn-outline">
             ← 이전
           </Link>
         ) : (
@@ -101,10 +98,7 @@ export default async function PhotoDetailPage({
         )}
 
         {next ? (
-          <Link
-            href={`/albums/${albumId}/photos/${next.id}`}
-            className="rounded-full border border-black/10 px-4 py-2 text-sm dark:border-white/10"
-          >
+          <Link href={`/albums/${albumId}/photos/${next.id}`} className="btn-outline">
             다음 →
           </Link>
         ) : (

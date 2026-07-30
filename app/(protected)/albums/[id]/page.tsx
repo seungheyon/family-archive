@@ -45,18 +45,18 @@ export default async function AlbumDetailPage({
     <div className="mx-auto max-w-5xl px-6 py-16">
       <Link
         href="/"
-        className="mb-4 inline-block text-sm text-zinc-500 hover:underline"
+        className="mb-4 inline-block text-sm text-muted hover:text-accent"
       >
         ← 앨범 목록
       </Link>
-      <h1 className="mb-8 text-2xl font-semibold text-black dark:text-zinc-50">
+      <h1 className="mb-8 text-2xl font-semibold text-foreground">
         {album.title}
       </h1>
 
       <FeedbackBanner msg={msg} count={count} />
 
       {(!photos || photos.length === 0) && (
-        <p className="text-sm text-zinc-500">이 앨범엔 아직 사진이 없어요.</p>
+        <p className="text-sm text-muted">이 앨범엔 아직 사진이 없어요.</p>
       )}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">

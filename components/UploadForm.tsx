@@ -39,18 +39,12 @@ export function UploadForm() {
         accept="image/*"
         multiple
         required
-        className="rounded-md border border-black/10 p-4 dark:border-white/10"
+        className="card"
       />
-      <button
-        type="submit"
-        disabled={submitting}
-        className="rounded-full bg-black px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
-      >
+      <button type="submit" disabled={submitting} className="btn-primary">
         {submitting ? "업로드 중..." : "업로드"}
       </button>
-      {status && (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{status}</p>
-      )}
+      {status && <p className="text-sm text-muted">{status}</p>}
     </form>
   );
 }

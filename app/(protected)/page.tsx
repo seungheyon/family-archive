@@ -30,14 +30,14 @@ export default async function AlbumListPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="mb-8 text-2xl font-semibold text-black dark:text-zinc-50">
+      <h1 className="mb-8 text-2xl font-semibold text-foreground">
         앨범 목록
       </h1>
 
       {visibleAlbums.length === 0 && (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted">
           아직 정리된 앨범이 없어요. 관리자라면{" "}
-          <Link href="/upload" className="underline">
+          <Link href="/upload" className="text-accent underline">
             사진을 업로드
           </Link>
           하고 정리하면 여기에 나타나요.
@@ -49,12 +49,12 @@ export default async function AlbumListPage() {
           <li key={album.id}>
             <Link
               href={`/albums/${album.id}`}
-              className="flex items-center justify-between rounded-md border border-black/10 p-4 transition-colors hover:bg-black/[.02] dark:border-white/10 dark:hover:bg-white/[.04]"
+              className="card flex items-center justify-between transition-colors hover:border-accent"
             >
-              <span className="font-medium text-black dark:text-zinc-50">
+              <span className="font-medium text-foreground">
                 {album.title}
               </span>
-              <span className="text-sm text-zinc-500">
+              <span className="text-sm text-muted">
                 사진 {album.photos?.[0]?.count ?? 0}장
               </span>
             </Link>

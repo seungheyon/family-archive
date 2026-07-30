@@ -17,7 +17,7 @@ export function DeleteButton({
       }}
       className={
         className ??
-        "rounded-full border border-black/10 px-3 py-1 text-sm text-red-600 dark:border-white/10 dark:text-red-400"
+        "rounded-full border border-border px-3 py-1 text-sm text-red-600 dark:text-red-400"
       }
     >
       {label}

@@ -23,13 +23,13 @@ export function AlbumTitleForm({
         name="title"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="flex-1 rounded-md border border-black/10 bg-transparent px-2 py-1 dark:border-white/10"
+        className="input flex-1 py-1"
       />
       <button
         type="submit"
         disabled={!dirty}
         title={dirty ? "변경한 이름 저장" : "이름을 바꾸면 저장할 수 있어요"}
-        className="rounded-full border border-black/10 px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10"
+        className="btn-outline px-3 py-1"
       >
         저장
       </button>

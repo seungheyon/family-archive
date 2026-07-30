@@ -12,14 +12,14 @@ export function Nav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-6 border-b border-black/10 px-6 py-4 text-sm dark:border-white/10">
+    <nav className="flex items-center gap-6 border-b border-border bg-surface px-6 py-4 text-sm">
       <Link
         href="/"
         aria-current={pathname === "/" ? "page" : undefined}
-        className={`font-medium ${
+        className={`font-semibold ${
           pathname === "/"
-            ? "text-black underline dark:text-zinc-50"
-            : "text-zinc-500 hover:text-black dark:hover:text-zinc-50"
+            ? "text-accent"
+            : "text-foreground hover:text-accent"
         }`}
       >
         가족 아카이브
@@ -33,8 +33,8 @@ export function Nav() {
             aria-current={active ? "page" : undefined}
             className={
               active
-                ? "text-black underline dark:text-zinc-50"
-                : "text-zinc-500 hover:text-black hover:underline dark:hover:text-zinc-50"
+                ? "font-medium text-accent underline underline-offset-4"
+                : "text-muted hover:text-accent"
             }
           >
             {link.label}
