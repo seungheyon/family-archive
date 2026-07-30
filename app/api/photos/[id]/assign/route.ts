@@ -15,6 +15,7 @@ export async function POST(
 
   const formData = await request.formData();
   const albumId = formData.get("album_id");
+  const redirectTo = formData.get("redirect_to");
 
   const supabase = createServerSupabaseClient(env);
   await supabase
@@ -22,8 +23,14 @@ export async function POST(
     .update({ album_id: typeof albumId === "string" && albumId ? albumId : null })
     .eq("id", id);
 
+  const base =
+    typeof redirectTo === "string" && redirectTo.startsWith("/")
+      ? redirectTo
+      : "/review";
+  const location = `${base}${base.includes("?") ? "&" : "?"}msg=assigned`;
+
   return new Response(null, {
     status: 302,
-    headers: { Location: "/review?msg=assigned" },
+    headers: { Location: location },
   });
 }

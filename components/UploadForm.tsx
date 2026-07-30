@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 
+interface UploadResult {
+  filename: string;
+  ok: boolean;
+  error?: string;
+}
+
 export function UploadForm() {
   const [status, setStatus] = useState<string>("");
+  const [failures, setFailures] = useState<UploadResult[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -12,17 +19,18 @@ export function UploadForm() {
     const formData = new FormData(form);
     setSubmitting(true);
     setStatus("업로드 중...");
+    setFailures([]);
 
     try {
       const res = await fetch("/api/photos", { method: "POST", body: formData });
-      const data = (await res.json()) as {
-        results?: Array<{ filename: string; ok: boolean; error?: string }>;
-      };
-      const okCount = data.results?.filter((r) => r.ok).length ?? 0;
-      const failCount = (data.results?.length ?? 0) - okCount;
+      const data = (await res.json()) as { results?: UploadResult[] };
+      const results = data.results ?? [];
+      const okCount = results.filter((r) => r.ok).length;
+      const failed = results.filter((r) => !r.ok);
       setStatus(
-        `완료: ${okCount}장 성공${failCount > 0 ? `, ${failCount}장 실패` : ""}`,
+        `완료: ${okCount}장 성공${failed.length > 0 ? `, ${failed.length}장 실패` : ""}`,
       );
+      setFailures(failed);
       form.reset();
     } catch {
       setStatus("업로드 중 오류가 발생했어요.");
@@ -45,6 +53,15 @@ export function UploadForm() {
         {submitting ? "업로드 중..." : "업로드"}
       </button>
       {status && <p className="text-sm text-muted">{status}</p>}
+      {failures.length > 0 && (
+        <ul className="card flex flex-col gap-1 text-sm text-red-600 dark:text-red-400">
+          {failures.map((f, i) => (
+            <li key={i}>
+              {f.filename}: {f.error ?? "알 수 없는 오류"}
+            </li>
+          ))}
+        </ul>
+      )}
     </form>
   );
 }

@@ -4,18 +4,27 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
 import { DeleteButton } from "@/components/DeleteButton";
+import { FeedbackBanner } from "@/components/FeedbackBanner";
 
 interface PhotoRow {
   id: string;
   taken_at: string | null;
 }
 
+interface AlbumOptionRow {
+  id: string;
+  title: string;
+}
+
 export default async function PhotoDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; photoId: string }>;
+  searchParams: Promise<{ msg?: string }>;
 }) {
   const { id: albumId, photoId } = await params;
+  const { msg } = await searchParams;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
   const admin = await isAdmin(env.SESSION_SECRET);
@@ -30,12 +39,20 @@ export default async function PhotoDetailPage({
     notFound();
   }
 
-  const { data: photos } = await supabase
-    .from("photos")
-    .select("id, taken_at")
-    .eq("album_id", albumId)
-    .order("taken_at", { ascending: true })
-    .returns<PhotoRow[]>();
+  const [{ data: photos }, { data: otherAlbums }] = await Promise.all([
+    supabase
+      .from("photos")
+      .select("id, taken_at")
+      .eq("album_id", albumId)
+      .order("taken_at", { ascending: true })
+      .returns<PhotoRow[]>(),
+    supabase
+      .from("albums")
+      .select("id, title")
+      .neq("id", albumId)
+      .order("title", { ascending: true })
+      .returns<AlbumOptionRow[]>(),
+  ]);
 
   const list = photos ?? [];
   const index = list.findIndex((p) => p.id === photoId);
@@ -62,6 +79,10 @@ export default async function PhotoDetailPage({
         </span>
       </div>
 
+      <div className="mb-4 w-full">
+        <FeedbackBanner msg={msg} />
+      </div>
+
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`/api/photos/${current.id}/file`}
@@ -74,6 +95,33 @@ export default async function PhotoDetailPage({
           ? new Date(current.taken_at).toLocaleString("ko-KR")
           : "촬영일자 정보 없음"}
       </p>
+
+      {otherAlbums && otherAlbums.length > 0 && (
+        <form
+          action={`/api/photos/${current.id}/assign`}
+          method="POST"
+          className="mt-4 flex items-center gap-2 text-sm"
+        >
+          <input
+            type="hidden"
+            name="redirect_to"
+            value={`/albums/${albumId}`}
+          />
+          <select name="album_id" required defaultValue="" className="input py-1">
+            <option value="" disabled hidden>
+              다른 앨범으로 이동
+            </option>
+            {otherAlbums.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.title}
+              </option>
+            ))}
+          </select>
+          <button type="submit" className="btn-outline px-3 py-1">
+            이동
+          </button>
+        </form>
+      )}
 
       <div className="mt-6 flex w-full items-center justify-between">
         {prev ? (

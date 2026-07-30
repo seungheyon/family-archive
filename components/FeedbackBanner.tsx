@@ -5,6 +5,9 @@ const MESSAGES: Record<string, (count?: string) => string> = {
   assigned: () => "사진을 선택한 앨범으로 옮겼어요.",
   renamed: () => "앨범 이름을 저장했어요.",
   deleted: () => "사진을 삭제했어요.",
+  "album-created": () => "새 앨범을 만들었어요.",
+  "album-deleted": () => "앨범을 삭제했어요. 사진은 미분류로 남아있어요.",
+  "album-merged": () => "앨범을 합쳤어요.",
 };
 
 export function FeedbackBanner({

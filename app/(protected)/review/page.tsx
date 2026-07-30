@@ -70,17 +70,79 @@ export default async function ReviewPage({
         <h2 className="mb-3 text-lg font-medium text-foreground">
           앨범 ({albums?.length ?? 0})
         </h2>
+
+        <form
+          action="/api/albums"
+          method="POST"
+          className="mb-3 flex items-center gap-2"
+        >
+          <input
+            type="text"
+            name="title"
+            required
+            placeholder="새 앨범 이름"
+            className="input flex-1 py-1"
+          />
+          <button type="submit" className="btn-outline px-3 py-1">
+            새 앨범 만들기
+          </button>
+        </form>
+
         <ul className="flex flex-col gap-3">
-          {albums?.map((album) => (
-            <li key={album.id} className="card flex items-center gap-2">
-              <div className="flex-1">
-                <AlbumTitleForm albumId={album.id} initialTitle={album.title} />
-              </div>
-              <span className="text-sm text-muted">
-                사진 {album.photos?.[0]?.count ?? 0}장
-              </span>
-            </li>
-          ))}
+          {albums?.map((album) => {
+            const otherAlbums = albums.filter((a) => a.id !== album.id);
+            return (
+              <li key={album.id} className="card flex items-center gap-2">
+                <div className="flex-1">
+                  <AlbumTitleForm
+                    albumId={album.id}
+                    initialTitle={album.title}
+                  />
+                </div>
+                <span className="text-sm text-muted">
+                  사진 {album.photos?.[0]?.count ?? 0}장
+                </span>
+                {admin && otherAlbums.length > 0 && (
+                  <form
+                    action={`/api/albums/${album.id}/merge`}
+                    method="POST"
+                    className="flex items-center gap-2"
+                  >
+                    <select
+                      name="target_album_id"
+                      required
+                      defaultValue=""
+                      className="input py-1"
+                    >
+                      <option value="" disabled hidden>
+                        합칠 앨범 선택
+                      </option>
+                      {otherAlbums.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.title}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="submit"
+                      title="이 앨범의 사진을 선택한 앨범으로 옮기고, 이 앨범은 삭제해요"
+                      className="btn-outline px-3 py-1"
+                    >
+                      합치기
+                    </button>
+                  </form>
+                )}
+                {admin && (
+                  <form action={`/api/albums/${album.id}/delete`} method="POST">
+                    <DeleteButton
+                      label="앨범 삭제"
+                      confirmMessage="앨범을 삭제할까요? 사진은 지워지지 않고 미분류로 남아요."
+                    />
+                  </form>
+                )}
+              </li>
+            );
+          })}
           {(!albums || albums.length === 0) && (
             <p className="text-sm text-muted">아직 앨범이 없어요.</p>
           )}
