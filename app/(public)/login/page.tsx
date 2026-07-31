@@ -24,11 +24,12 @@ export default async function LoginPage({
         <input
           type="password"
           name="password"
-          placeholder="비밀번호"
+          placeholder="비밀번호 (숫자 4자)를 입력해 주세요"
           required
           autoFocus
           className="input"
         />
+        <p className="text-xs text-muted">💡 힌트: 정현승현 생일</p>
         {error && (
           <p className="text-sm text-red-600 dark:text-red-400">
             비밀번호가 맞지 않아요.

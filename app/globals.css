@@ -1,14 +1,41 @@
 @import "tailwindcss";
 
 :root {
+  /* 테마별로 갈리지 않는 공통 토큰 */
   --background: #ffffff;
-  --bg-gradient-from: #cfeafb;
   --bg-gradient-to: #ffffff;
   --surface: #ffffff;
-  --foreground: #1f2a37;
-  --muted: #64748b;
-  --border: #d3e6f3;
+  --foreground: #22262b;
+  --muted: #64707a;
+  --border: #dde3e7;
+  --accent-foreground: #ffffff;
+
+  /* 기본 테마: 살구 */
+  --bg-gradient-from: #fde1d3;
+  --accent: #e8935f;
+}
+
+:root[data-theme="apricot"] {
+  --bg-gradient-from: #fde1d3;
+  --accent: #e8935f;
+  --accent-foreground: #ffffff;
+}
+
+:root[data-theme="sky"] {
+  --bg-gradient-from: #cfeafb;
   --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+}
+
+:root[data-theme="pink"] {
+  --bg-gradient-from: #fbd8e8;
+  --accent: #ec6fa0;
+  --accent-foreground: #ffffff;
+}
+
+:root[data-theme="lime"] {
+  --bg-gradient-from: #dff2c8;
+  --accent: #5a9c2f;
   --accent-foreground: #ffffff;
 }
 
@@ -26,15 +53,40 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0b1117;
+    --background: #12181d;
+    --bg-gradient-to: #12181d;
+    --surface: #1b2226;
+    --foreground: #e7ecef;
+    --muted: #93a0aa;
+    --border: #2b343b;
+    --accent-foreground: #2e2019;
+
+    --bg-gradient-from: #2e2019;
+    --accent: #f0a873;
+  }
+
+  :root[data-theme="apricot"] {
+    --bg-gradient-from: #2e2019;
+    --accent: #f0a873;
+    --accent-foreground: #2e2019;
+  }
+
+  :root[data-theme="sky"] {
     --bg-gradient-from: #16222e;
-    --bg-gradient-to: #0b1117;
-    --surface: #1c2833;
-    --foreground: #e6edf3;
-    --muted: #93a4b5;
-    --border: #2c3d4c;
     --accent: #5b9bd9;
     --accent-foreground: #0b1117;
+  }
+
+  :root[data-theme="pink"] {
+    --bg-gradient-from: #2e1c26;
+    --accent: #f08fbb;
+    --accent-foreground: #2e1c26;
+  }
+
+  :root[data-theme="lime"] {
+    --bg-gradient-from: #1e2a18;
+    --accent: #8fc65a;
+    --accent-foreground: #17240f;
   }
 }
 

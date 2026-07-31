@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const LINKS = [
   { href: "/upload", label: "업로드" },
@@ -41,6 +42,7 @@ export function Nav() {
           </Link>
         );
       })}
+      <ThemeSwitcher />
     </nav>
   );
 }

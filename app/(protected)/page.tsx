@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { ThemeHintBubble } from "@/components/ThemeHintBubble";
 
 export const metadata: Metadata = {
   title: "앨범 목록",
@@ -33,6 +34,8 @@ export default async function AlbumListPage() {
       <h1 className="mb-8 text-2xl font-semibold text-foreground">
         앨범 목록
       </h1>
+
+      <ThemeHintBubble />
 
       {visibleAlbums.length === 0 && (
         <p className="text-sm text-muted">
