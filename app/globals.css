@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf6f0;
+  --background: #ffffff;
+  --bg-gradient-from: #cfeafb;
+  --bg-gradient-to: #ffffff;
   --surface: #ffffff;
-  --foreground: #2b211a;
-  --muted: #8a7b6c;
-  --border: #eae0d5;
-  --accent: #bd5d3a;
+  --foreground: #1f2a37;
+  --muted: #64748b;
+  --border: #d3e6f3;
+  --accent: #3b82f6;
   --accent-foreground: #ffffff;
 }
 
@@ -24,23 +26,56 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1c1613;
-    --surface: #2a2119;
-    --foreground: #f3e9dd;
-    --muted: #a69582;
-    --border: #3a2e24;
-    --accent: #e08856;
-    --accent-foreground: #1c1613;
+    --background: #0b1117;
+    --bg-gradient-from: #16222e;
+    --bg-gradient-to: #0b1117;
+    --surface: #1c2833;
+    --foreground: #e6edf3;
+    --muted: #93a4b5;
+    --border: #2c3d4c;
+    --accent: #5b9bd9;
+    --accent-foreground: #0b1117;
   }
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(
+    to bottom,
+    var(--bg-gradient-from) 0%,
+    var(--bg-gradient-from) 75%,
+    var(--bg-gradient-to) 100%
+  );
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @layer components {
+  .toast-bubble {
+    @apply relative inline-block rounded-2xl bg-accent px-4 py-3 text-sm font-medium text-accent-foreground shadow-lg;
+    animation: pop-in 0.35s ease-out;
+  }
+
+  .toast-bubble::before {
+    content: "";
+    @apply absolute -top-1.5 left-6 h-3 w-3 rotate-45 bg-accent;
+  }
+
   .btn-primary {
     @apply inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-accent px-4 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40;
   }

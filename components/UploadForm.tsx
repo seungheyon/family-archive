@@ -10,6 +10,7 @@ interface UploadResult {
 
 export function UploadForm() {
   const [status, setStatus] = useState<string>("");
+  const [okCount, setOkCount] = useState(0);
   const [failures, setFailures] = useState<UploadResult[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -18,19 +19,21 @@ export function UploadForm() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     setSubmitting(true);
-    setStatus("업로드 중...");
+    setStatus("");
+    setOkCount(0);
     setFailures([]);
 
     try {
       const res = await fetch("/api/photos", { method: "POST", body: formData });
       const data = (await res.json()) as { results?: UploadResult[] };
       const results = data.results ?? [];
-      const okCount = results.filter((r) => r.ok).length;
+      const succeeded = results.filter((r) => r.ok).length;
       const failed = results.filter((r) => !r.ok);
-      setStatus(
-        `완료: ${okCount}장 성공${failed.length > 0 ? `, ${failed.length}장 실패` : ""}`,
-      );
+      setOkCount(succeeded);
       setFailures(failed);
+      if (succeeded === 0 && failed.length > 0) {
+        setStatus("업로드에 실패했어요.");
+      }
       form.reset();
     } catch {
       setStatus("업로드 중 오류가 발생했어요.");
@@ -52,6 +55,11 @@ export function UploadForm() {
       <button type="submit" disabled={submitting} className="btn-primary">
         {submitting ? "업로드 중..." : "업로드"}
       </button>
+      {okCount > 0 && (
+        <div className="toast-bubble w-fit">
+          🎉 사진 {okCount}장 업로드 완료!
+        </div>
+      )}
       {status && <p className="text-sm text-muted">{status}</p>}
       {failures.length > 0 && (
         <ul className="card flex flex-col gap-1 text-sm text-red-600 dark:text-red-400">

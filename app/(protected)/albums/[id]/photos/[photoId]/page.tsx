@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
 import { DeleteButton } from "@/components/DeleteButton";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
+import { PhotoLightbox } from "@/components/PhotoLightbox";
 
 interface PhotoRow {
   id: string;
@@ -83,14 +84,10 @@ export default async function PhotoDetailPage({
         <FeedbackBanner msg={msg} />
       </div>
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`/api/photos/${current.id}/file`}
-        alt=""
-        className="max-h-[70vh] w-auto rounded-xl object-contain"
-      />
+      <PhotoLightbox src={`/api/photos/${current.id}/file`} alt="" />
+      <p className="mt-2 text-xs text-muted">사진을 탭하면 확대할 수 있어요</p>
 
-      <p className="mt-3 text-sm text-muted">
+      <p className="mt-1 text-sm text-muted">
         {current.taken_at
           ? new Date(current.taken_at).toLocaleString("ko-KR")
           : "촬영일자 정보 없음"}
