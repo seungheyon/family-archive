@@ -1,4 +1,4 @@
-const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30일
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 1일
 
 function toHex(buffer: ArrayBuffer): string {
   return Array.from(new Uint8Array(buffer))

@@ -74,16 +74,16 @@ export default async function ReviewPage({
         <form
           action="/api/albums"
           method="POST"
-          className="mb-3 flex items-center gap-2"
+          className="mb-3 flex flex-wrap items-center gap-2"
         >
           <input
             type="text"
             name="title"
             required
             placeholder="새 앨범 이름"
-            className="input flex-1 py-1"
+            className="input flex-1"
           />
-          <button type="submit" className="btn-outline px-3 py-1">
+          <button type="submit" className="btn-outline">
             새 앨범 만들기
           </button>
         </form>
@@ -92,8 +92,11 @@ export default async function ReviewPage({
           {albums?.map((album) => {
             const otherAlbums = albums.filter((a) => a.id !== album.id);
             return (
-              <li key={album.id} className="card flex items-center gap-2">
-                <div className="flex-1">
+              <li
+                key={album.id}
+                className="card flex flex-wrap items-center gap-2"
+              >
+                <div className="min-w-40 flex-1">
                   <AlbumTitleForm
                     albumId={album.id}
                     initialTitle={album.title}
@@ -106,13 +109,13 @@ export default async function ReviewPage({
                   <form
                     action={`/api/albums/${album.id}/merge`}
                     method="POST"
-                    className="flex items-center gap-2"
+                    className="flex flex-wrap items-center gap-2"
                   >
                     <select
                       name="target_album_id"
                       required
                       defaultValue=""
-                      className="input py-1"
+                      className="select"
                     >
                       <option value="" disabled hidden>
                         합칠 앨범 선택
@@ -126,7 +129,7 @@ export default async function ReviewPage({
                     <button
                       type="submit"
                       title="이 앨범의 사진을 선택한 앨범으로 옮기고, 이 앨범은 삭제해요"
-                      className="btn-outline px-3 py-1"
+                      className="btn-outline"
                     >
                       합치기
                     </button>
@@ -155,8 +158,11 @@ export default async function ReviewPage({
         </h2>
         <ul className="flex flex-col gap-3">
           {unassigned?.map((photo) => (
-            <li key={photo.id} className="card flex items-center gap-2 text-sm">
-              <span className="flex-1">{photo.original_filename}</span>
+            <li
+              key={photo.id}
+              className="card flex flex-wrap items-center gap-2 text-sm"
+            >
+              <span className="min-w-24 flex-1">{photo.original_filename}</span>
               <span className="text-muted">
                 {photo.taken_at
                   ? new Date(photo.taken_at).toLocaleDateString("ko-KR")
@@ -165,14 +171,9 @@ export default async function ReviewPage({
               <form
                 action={`/api/photos/${photo.id}/assign`}
                 method="POST"
-                className="flex items-center gap-2"
+                className="flex flex-wrap items-center gap-2"
               >
-                <select
-                  name="album_id"
-                  required
-                  defaultValue=""
-                  className="input py-1"
-                >
+                <select name="album_id" required defaultValue="" className="select">
                   <option value="" disabled hidden>
                     앨범을 선택하세요
                   </option>
@@ -190,9 +191,9 @@ export default async function ReviewPage({
                       ? "먼저 앨범을 만들어야 배정할 수 있어요"
                       : "선택한 앨범으로 이 사진 옮기기"
                   }
-                  className="btn-outline px-3 py-1"
+                  className="btn-outline"
                 >
-                  선택한 앨범으로 옮기기
+                  이동
                 </button>
               </form>
               {admin && (

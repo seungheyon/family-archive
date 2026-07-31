@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createSessionToken } from "@/lib/session";
 
-const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30일
+const SESSION_MAX_AGE_SECONDS = 24 * 60 * 60; // 1일
 
 export async function POST(request: Request) {
   const { env } = await getCloudflareContext({ async: true });

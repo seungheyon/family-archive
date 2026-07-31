@@ -17,10 +17,7 @@ export function DeleteButton({
           e.preventDefault();
         }
       }}
-      className={
-        className ??
-        "rounded-full border border-border px-3 py-1 text-sm text-red-600 dark:text-red-400"
-      }
+      className={className ?? "btn-danger"}
     >
       {label}
     </button>

@@ -16,20 +16,20 @@ export function AlbumTitleForm({
     <form
       action={`/api/albums/${albumId}`}
       method="POST"
-      className="flex items-center gap-2"
+      className="flex flex-wrap items-center gap-2"
     >
       <input
         type="text"
         name="title"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="input flex-1 py-1"
+        className="input min-w-40 flex-1"
       />
       <button
         type="submit"
         disabled={!dirty}
         title={dirty ? "변경한 이름 저장" : "이름을 바꾸면 저장할 수 있어요"}
-        className="btn-outline px-3 py-1"
+        className="btn-outline"
       >
         저장
       </button>

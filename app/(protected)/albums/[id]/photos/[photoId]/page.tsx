@@ -100,14 +100,14 @@ export default async function PhotoDetailPage({
         <form
           action={`/api/photos/${current.id}/assign`}
           method="POST"
-          className="mt-4 flex items-center gap-2 text-sm"
+          className="mt-4 flex flex-wrap items-center gap-2 text-sm"
         >
           <input
             type="hidden"
             name="redirect_to"
             value={`/albums/${albumId}`}
           />
-          <select name="album_id" required defaultValue="" className="input py-1">
+          <select name="album_id" required defaultValue="" className="select">
             <option value="" disabled hidden>
               다른 앨범으로 이동
             </option>
@@ -117,7 +117,7 @@ export default async function PhotoDetailPage({
               </option>
             ))}
           </select>
-          <button type="submit" className="btn-outline px-3 py-1">
+          <button type="submit" className="btn-outline">
             이동
           </button>
         </form>
