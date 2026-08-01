@@ -145,6 +145,10 @@ body {
     @apply inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-border px-4 text-sm font-medium text-red-600 transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400;
   }
 
+  .btn-tinted {
+    @apply inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-accent/15 px-4 text-sm font-medium text-accent transition-colors hover:bg-accent/25 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
   .card {
     @apply rounded-xl border border-border bg-surface p-4;
   }

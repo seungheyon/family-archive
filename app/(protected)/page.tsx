@@ -51,7 +51,7 @@ export default async function AlbumListPage({
         <div className="flex flex-wrap gap-2">
           <CreateAlbumButton />
           {!!unassignedCount && unassignedCount > 0 && (
-            <Link href="/albums/unassigned" className="btn-outline">
+            <Link href="/albums/unassigned" className="btn-tinted">
               앨범에 포함되지 않은 사진이 있어요!
             </Link>
           )}

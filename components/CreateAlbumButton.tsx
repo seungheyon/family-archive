@@ -7,7 +7,7 @@ export function CreateAlbumButton() {
 
   if (!open) {
     return (
-      <button type="button" className="btn-outline" onClick={() => setOpen(true)}>
+      <button type="button" className="btn-tinted" onClick={() => setOpen(true)}>
         새 앨범을 만들어요!
       </button>
     );

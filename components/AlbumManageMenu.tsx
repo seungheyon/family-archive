@@ -42,7 +42,7 @@ export function AlbumManageMenu({
         onClick={() => setOpen((v) => !v)}
         aria-label="앨범 관리"
         title="앨범 관리"
-        className="btn-outline bg-surface px-4"
+        className="btn-tinted px-4"
       >
         <DotsIcon />
       </button>

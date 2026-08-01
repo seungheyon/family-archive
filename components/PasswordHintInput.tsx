@@ -21,6 +21,7 @@ export function PasswordHintInput() {
         required
         autoFocus
         onFocus={handleFocus}
+        onClick={handleFocus}
         className="input"
       />
       {showHint && (

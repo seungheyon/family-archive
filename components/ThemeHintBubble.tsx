@@ -21,7 +21,7 @@ export function ThemeHintBubble() {
   if (!visible) return null;
 
   return (
-    <div className="mb-6 flex justify-end">
+    <div className="-mt-10 mb-6 flex justify-end">
       <button
         type="button"
         onClick={() => (guiding ? dismiss() : setGuiding(true))}

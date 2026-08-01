@@ -220,6 +220,12 @@ export function AlbumGrid({
       <div
         ref={containerRef}
         className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
+        onClick={(e) => {
+          // 사진이 아니라 빈 공간(그리드 gap 등)을 탭하면 선택 모드를 종료
+          if (selectionMode && e.target === e.currentTarget) {
+            exitSelectionMode();
+          }
+        }}
       >
         {photos.map((photo) => (
           <a
