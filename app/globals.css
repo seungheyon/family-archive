@@ -90,6 +90,15 @@
   }
 }
 
+html,
+body {
+  /* 모바일 브라우저는 최초 페인트 시 flex-shrink가 적용되기 전의 콘텐츠 고유 폭(예: 긴
+     앨범 제목)을 기준으로 뷰포트 폭을 계산해버리는 경우가 있다 — 이러면 실제 레이아웃은
+     정상인데도 페이지가 확대된 채로 열려 오른쪽/아래가 잘려 보인다. overflow-x:hidden으로
+     그 계산에 영향을 주는 일시적 가로 오버플로우 자체를 차단한다. */
+  overflow-x: hidden;
+}
+
 body {
   background: linear-gradient(
     to bottom,
