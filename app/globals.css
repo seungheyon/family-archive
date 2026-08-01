@@ -161,3 +161,15 @@ body {
     @apply h-10 w-full min-w-0 max-w-56 shrink rounded-lg border border-border bg-surface px-3 text-foreground;
   }
 }
+
+/*
+  PhotoSwipe 라이트박스 상단바 — 앱 테마(라이트/다크)와 무관하게 항상 밝은 배경 +
+  어두운 아이콘으로 고정한다. 사진 위에 뜨는 오버레이 UI라 앱 테마를 따라가는 것보다
+  일관된 대비를 유지하는 쪽이 가독성이 좋다. .pswp .pswp__top-bar로 라이브러리 기본
+  선택자보다 살짝 더 구체적으로 만들어 로드 순서와 무관하게 항상 이 규칙이 이긴다.
+*/
+.pswp .pswp__top-bar {
+  background: rgba(255, 255, 255, 0.92);
+  --pswp-icon-color: #2b2b2b;
+  --pswp-icon-color-secondary: #ffffff;
+}

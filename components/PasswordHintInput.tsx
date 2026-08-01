@@ -13,7 +13,7 @@ export function PasswordHintInput() {
   }
 
   return (
-    <div className="relative">
+    <div>
       <input
         type="password"
         name="password"
@@ -25,9 +25,7 @@ export function PasswordHintInput() {
         className="input"
       />
       {showHint && (
-        <div className="toast-bubble absolute left-0 top-full z-10 mt-2 text-xs">
-          💡 힌트: 정현승현 생일
-        </div>
+        <div className="toast-bubble mt-2 text-xs">💡 힌트: 정현승현 생일</div>
       )}
     </div>
   );

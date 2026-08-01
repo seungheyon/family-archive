@@ -79,33 +79,51 @@ export function AlbumGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectionMode, photos.length]);
 
+  // 라이트박스 위에 뜨는 팝업이라 앱 테마(라이트/다크)를 따라가지 않고 항상 밝은 배경으로 고정 —
+  // 사진 위 오버레이는 일관된 대비가 테마 일치보다 중요하다고 판단(상단바와 동일한 방침).
+  function styleFloatingMenu(el: HTMLDivElement, rect: DOMRect) {
+    el.style.position = "fixed";
+    el.style.top = `${rect.bottom + 4}px`;
+    el.style.right = `${window.innerWidth - rect.right}px`;
+    el.style.zIndex = "10000";
+    el.style.display = "flex";
+    el.style.flexDirection = "column";
+    el.style.gap = "4px";
+    el.style.padding = "8px";
+    el.style.borderRadius = "12px";
+    el.style.background = "#ffffff";
+    el.style.boxShadow = "0 4px 16px rgba(0,0,0,0.25)";
+  }
+
+  function floatingMenuButton(label: string, danger = false): HTMLButtonElement {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.style.whiteSpace = "nowrap";
+    b.style.borderRadius = "9999px";
+    b.style.padding = "8px 16px";
+    b.style.fontSize = "14px";
+    b.style.border = "1px solid #e5e5e5";
+    b.style.background = "#ffffff";
+    b.style.color = danger ? "#dc2626" : "#22262b";
+    return b;
+  }
+
   function openPhotoMenu(photoId: string, anchorEl: HTMLElement) {
     document.getElementById("pswp-photo-menu")?.remove();
 
     const menu = document.createElement("div");
     menu.id = "pswp-photo-menu";
-    menu.className = "card absolute z-[10000] flex flex-col gap-1 p-2 text-sm";
     const rect = anchorEl.getBoundingClientRect();
-    menu.style.position = "fixed";
-    menu.style.top = `${rect.bottom + 4}px`;
-    menu.style.right = `${window.innerWidth - rect.right}px`;
+    styleFloatingMenu(menu, rect);
 
-    const moveBtn = document.createElement("button");
-    moveBtn.type = "button";
-    moveBtn.className = "btn-outline";
-    moveBtn.textContent = "다른 앨범으로 이동";
+    const moveBtn = floatingMenuButton("다른 앨범으로 이동");
     moveBtn.onclick = () => {
       menu.remove();
       const sub = document.createElement("div");
-      sub.className = "card absolute z-[10000] flex flex-col gap-1 p-2 text-sm";
-      sub.style.position = "fixed";
-      sub.style.top = `${rect.bottom + 4}px`;
-      sub.style.right = `${window.innerWidth - rect.right}px`;
+      styleFloatingMenu(sub, rect);
       albums.forEach((a) => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "btn-outline";
-        b.textContent = a.title;
+        const b = floatingMenuButton(a.title);
         b.onclick = async () => {
           sub.remove();
           await movePhotos([photoId], a.id);
@@ -117,10 +135,7 @@ export function AlbumGrid({
       setTimeout(() => document.addEventListener("click", () => sub.remove(), { once: true }), 0);
     };
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.type = "button";
-    deleteBtn.className = "btn-danger";
-    deleteBtn.textContent = "삭제";
+    const deleteBtn = floatingMenuButton("삭제", true);
     deleteBtn.style.display = admin ? "" : "none";
     deleteBtn.onclick = async () => {
       menu.remove();

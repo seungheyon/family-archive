@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { ThemeHintBubble } from "@/components/ThemeHintBubble";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { CreateAlbumButton } from "@/components/CreateAlbumButton";
+import { QuickUploadButton } from "@/components/QuickUploadButton";
 
 export const metadata: Metadata = {
   title: "앨범 목록",
@@ -46,10 +47,11 @@ export default async function AlbumListPage({
     <div className="mx-auto max-w-3xl px-6 py-16">
       <ThemeHintBubble />
 
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold text-foreground">앨범 목록</h1>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <CreateAlbumButton />
+          <QuickUploadButton />
           {!!unassignedCount && unassignedCount > 0 && (
             <Link href="/albums/unassigned" className="btn-tinted">
               앨범에 포함되지 않은 사진이 있어요!
