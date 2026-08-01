@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PasswordHintInput } from "@/components/PasswordHintInput";
 
 export const metadata: Metadata = {
   title: "로그인",
@@ -21,15 +22,7 @@ export default async function LoginPage({
         <h1 className="text-xl font-semibold text-foreground">
           가족 아카이브
         </h1>
-        <input
-          type="password"
-          name="password"
-          placeholder="비밀번호 (숫자 4자)를 입력해 주세요"
-          required
-          autoFocus
-          className="input"
-        />
-        <p className="text-xs text-muted">💡 힌트: 정현승현 생일</p>
+        <PasswordHintInput />
         {error && (
           <p className="text-sm text-red-600 dark:text-red-400">
             비밀번호가 맞지 않아요.

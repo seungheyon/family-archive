@@ -47,14 +47,14 @@ export function UploadForm({ albumId }: { albumId?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex w-full min-w-0 flex-col gap-4">
       <input
         type="file"
         name="photos"
         accept="image/*"
         multiple
         required
-        className="card"
+        className="card w-full min-w-0 max-w-full"
       />
       <button type="submit" disabled={submitting} className="btn-primary">
         {submitting ? "업로드 중..." : "업로드"}

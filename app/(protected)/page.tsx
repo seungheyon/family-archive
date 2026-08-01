@@ -4,6 +4,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { ThemeHintBubble } from "@/components/ThemeHintBubble";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
+import { CreateAlbumButton } from "@/components/CreateAlbumButton";
 
 export const metadata: Metadata = {
   title: "앨범 목록",
@@ -43,39 +44,21 @@ export default async function AlbumListPage({
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="mb-8 text-2xl font-semibold text-foreground">
-        앨범 목록
-      </h1>
-
       <ThemeHintBubble />
+
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-semibold text-foreground">앨범 목록</h1>
+        <div className="flex flex-wrap gap-2">
+          <CreateAlbumButton />
+          {!!unassignedCount && unassignedCount > 0 && (
+            <Link href="/albums/unassigned" className="btn-outline">
+              앨범에 포함되지 않은 사진이 있어요!
+            </Link>
+          )}
+        </div>
+      </div>
+
       <FeedbackBanner msg={msg} count={count} />
-
-      <form
-        action="/api/albums"
-        method="POST"
-        className="mb-6 flex flex-wrap items-center gap-2"
-      >
-        <input
-          type="text"
-          name="title"
-          required
-          placeholder="새 앨범 이름"
-          className="input flex-1"
-        />
-        <button type="submit" className="btn-outline">
-          새 앨범 만들기
-        </button>
-      </form>
-
-      {!!unassignedCount && unassignedCount > 0 && (
-        <Link
-          href="/albums/unassigned"
-          className="card mb-6 flex items-center justify-between text-sm transition-colors hover:border-accent"
-        >
-          <span className="text-foreground">미분류 사진이 있어요</span>
-          <span className="text-muted">{unassignedCount}장</span>
-        </Link>
-      )}
 
       {visibleAlbums.length === 0 && (
         <p className="text-sm text-muted">

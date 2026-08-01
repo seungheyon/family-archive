@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlbumTitleForm } from "@/components/AlbumTitleForm";
 import { DeleteButton } from "@/components/DeleteButton";
+import { DotsIcon } from "@/components/DotsIcon";
 
 interface AlbumOption {
   id: string;
@@ -35,15 +36,15 @@ export function AlbumManageMenu({
   }, [open]);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative shrink-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="앨범 관리"
         title="앨범 관리"
-        className="btn-outline px-3"
+        className="btn-outline bg-surface px-4"
       >
-        ⋮
+        <DotsIcon />
       </button>
       {open && (
         <div className="card absolute right-0 top-12 z-20 flex w-72 flex-col gap-3 p-3">

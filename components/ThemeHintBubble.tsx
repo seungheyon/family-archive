@@ -21,14 +21,16 @@ export function ThemeHintBubble() {
   if (!visible) return null;
 
   return (
-    <button
-      type="button"
-      onClick={() => (guiding ? dismiss() : setGuiding(true))}
-      className="toast-bubble mb-6 block text-left"
-    >
-      {guiding
-        ? "👆 오른쪽 위 🎨 버튼을 눌러보세요! (한 번 더 누르면 닫혀요)"
-        : "🎨 색상 테마를 변경할 수 있어요!"}
-    </button>
+    <div className="mb-6 flex justify-end">
+      <button
+        type="button"
+        onClick={() => (guiding ? dismiss() : setGuiding(true))}
+        className="toast-bubble toast-bubble-tail-right text-left"
+      >
+        {guiding
+          ? "👆 오른쪽 위 🎨 버튼을 눌러보세요! (한 번 더 누르면 닫혀요)"
+          : "🎨 색상 테마를 변경할 수 있어요!"}
+      </button>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import "photoswipe/style.css";
+import { DOTS_ICON_HTML } from "@/components/DotsIcon";
 
 interface Photo {
   id: string;
@@ -57,7 +58,8 @@ export function AlbumGrid({
         ariaLabel: "사진 관리",
         order: 9,
         isButton: true,
-        html: "&#8942;",
+        appendTo: "bar",
+        html: DOTS_ICON_HTML,
         onClick: (_e, el) => {
           const pswp = lightbox.pswp;
           const currEl = pswp?.currSlide?.data?.element as HTMLElement | undefined;
@@ -237,12 +239,15 @@ export function AlbumGrid({
             onTouchStart={() => startPress(photo.id)}
             onTouchEnd={cancelPress}
             onClick={(e) => handleThumbClick(e, photo.id)}
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ WebkitTouchCallout: "none", userSelect: "none" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/api/photos/${photo.id}/file`}
               alt=""
               loading="lazy"
+              draggable={false}
               className="aspect-square w-full rounded-md object-cover"
             />
             {selectionMode && (
