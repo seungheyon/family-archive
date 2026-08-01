@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DEFAULT_THEME, THEME_STORAGE_KEY, THEMES, type ThemeId } from "@/lib/theme";
+import {
+  DEFAULT_THEME,
+  THEME_STORAGE_KEY,
+  THEME_SWITCHER_OPENED_EVENT,
+  THEMES,
+  type ThemeId,
+} from "@/lib/theme";
 
 export function ThemeSwitcher() {
   const [open, setOpen] = useState(false);
@@ -35,7 +41,10 @@ export function ThemeSwitcher() {
     <div ref={containerRef} className="relative ml-auto">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => !v);
+          window.dispatchEvent(new CustomEvent(THEME_SWITCHER_OPENED_EVENT));
+        }}
         aria-label="색상 테마 변경"
         title="색상 테마 변경"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-lg transition-colors hover:bg-surface"

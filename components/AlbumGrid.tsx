@@ -85,7 +85,9 @@ export function AlbumGrid({
     el.style.position = "fixed";
     el.style.top = `${rect.bottom + 4}px`;
     el.style.right = `${window.innerWidth - rect.right}px`;
-    el.style.zIndex = "10000";
+    // PhotoSwipe 루트 자체가 z-index:100000(--pswp-root-z-index)이라, 그보다 낮으면
+    // 사진 레이어 뒤에 가려지고 클릭도 사진 쪽으로 먹힌다. 확실히 더 높게 잡는다.
+    el.style.zIndex = "100010";
     el.style.display = "flex";
     el.style.flexDirection = "column";
     el.style.gap = "4px";

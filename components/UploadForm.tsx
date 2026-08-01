@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Toast } from "@/components/Toast";
 
 interface UploadResult {
   filename: string;
@@ -13,6 +14,7 @@ export function UploadForm({ albumId }: { albumId?: string }) {
   const router = useRouter();
   const [status, setStatus] = useState<string>("");
   const [okCount, setOkCount] = useState(0);
+  const [toastKey, setToastKey] = useState(0);
   const [failures, setFailures] = useState<UploadResult[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,7 +40,10 @@ export function UploadForm({ albumId }: { albumId?: string }) {
         setStatus("업로드에 실패했어요.");
       }
       form.reset();
-      if (succeeded > 0) router.refresh();
+      if (succeeded > 0) {
+        setToastKey((k) => k + 1);
+        router.refresh();
+      }
     } catch {
       setStatus("업로드 중 오류가 발생했어요.");
     } finally {
@@ -60,9 +65,11 @@ export function UploadForm({ albumId }: { albumId?: string }) {
         {submitting ? "업로드 중..." : "업로드"}
       </button>
       {okCount > 0 && (
-        <div className="toast-bubble w-fit">
-          🎉 사진 {okCount}장 업로드 완료!
-        </div>
+        <Toast
+          key={toastKey}
+          message={`🎉 사진 ${okCount}장 업로드 완료!`}
+          onDismiss={() => setOkCount(0)}
+        />
       )}
       {status && <p className="text-sm text-muted">{status}</p>}
       {failures.length > 0 && (

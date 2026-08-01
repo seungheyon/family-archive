@@ -1,5 +1,6 @@
 export const THEME_STORAGE_KEY = "family-archive-theme";
 export const THEME_HINT_DISMISSED_KEY = "family-archive-theme-hint-dismissed";
+export const THEME_SWITCHER_OPENED_EVENT = "family-archive:theme-switcher-opened";
 export const DEFAULT_THEME = "apricot";
 
 export const THEMES = [
