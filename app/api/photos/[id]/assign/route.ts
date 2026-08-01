@@ -26,7 +26,7 @@ export async function POST(
   const base =
     typeof redirectTo === "string" && redirectTo.startsWith("/")
       ? redirectTo
-      : "/review";
+      : "/albums/unassigned";
   const location = `${base}${base.includes("?") ? "&" : "?"}msg=assigned`;
 
   return new Response(null, {

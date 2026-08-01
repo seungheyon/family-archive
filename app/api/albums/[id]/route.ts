@@ -23,6 +23,6 @@ export async function POST(
 
   return new Response(null, {
     status: 302,
-    headers: { Location: "/review?msg=renamed" },
+    headers: { Location: `/albums/${id}?msg=renamed` },
   });
 }

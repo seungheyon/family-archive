@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { ThemeHintBubble } from "@/components/ThemeHintBubble";
+import { FeedbackBanner } from "@/components/FeedbackBanner";
 
 export const metadata: Metadata = {
   title: "앨범 목록",
@@ -16,15 +17,26 @@ interface AlbumRow {
   photos: { count: number }[];
 }
 
-export default async function AlbumListPage() {
+export default async function AlbumListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ msg?: string; count?: string }>;
+}) {
+  const { msg, count } = await searchParams;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
 
-  const { data: albums } = await supabase
-    .from("albums")
-    .select("id, title, date_start, date_end, photos(count)")
-    .order("date_start", { ascending: false })
-    .returns<AlbumRow[]>();
+  const [{ data: albums }, { count: unassignedCount }] = await Promise.all([
+    supabase
+      .from("albums")
+      .select("id, title, date_start, date_end, photos(count)")
+      .order("date_start", { ascending: false })
+      .returns<AlbumRow[]>(),
+    supabase
+      .from("photos")
+      .select("id", { count: "exact", head: true })
+      .is("album_id", null),
+  ]);
 
   const visibleAlbums =
     albums?.filter((album) => (album.photos?.[0]?.count ?? 0) > 0) ?? [];
@@ -36,14 +48,39 @@ export default async function AlbumListPage() {
       </h1>
 
       <ThemeHintBubble />
+      <FeedbackBanner msg={msg} count={count} />
+
+      <form
+        action="/api/albums"
+        method="POST"
+        className="mb-6 flex flex-wrap items-center gap-2"
+      >
+        <input
+          type="text"
+          name="title"
+          required
+          placeholder="새 앨범 이름"
+          className="input flex-1"
+        />
+        <button type="submit" className="btn-outline">
+          새 앨범 만들기
+        </button>
+      </form>
+
+      {!!unassignedCount && unassignedCount > 0 && (
+        <Link
+          href="/albums/unassigned"
+          className="card mb-6 flex items-center justify-between text-sm transition-colors hover:border-accent"
+        >
+          <span className="text-foreground">미분류 사진이 있어요</span>
+          <span className="text-muted">{unassignedCount}장</span>
+        </Link>
+      )}
 
       {visibleAlbums.length === 0 && (
         <p className="text-sm text-muted">
-          아직 정리된 앨범이 없어요. 관리자라면{" "}
-          <Link href="/upload" className="text-accent underline">
-            사진을 업로드
-          </Link>
-          하고 정리하면 여기에 나타나요.
+          아직 정리된 앨범이 없어요. 위에서 앨범을 만들고 들어가서 사진을
+          업로드해 보세요.
         </p>
       )}
 

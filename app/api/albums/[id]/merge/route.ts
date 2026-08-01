@@ -15,18 +15,24 @@ export async function POST(
 
   const formData = await request.formData();
   const targetAlbumId = formData.get("target_album_id");
+  const validTarget =
+    typeof targetAlbumId === "string" && targetAlbumId && targetAlbumId !== id
+      ? targetAlbumId
+      : null;
 
-  if (typeof targetAlbumId === "string" && targetAlbumId && targetAlbumId !== id) {
+  if (validTarget) {
     const supabase = createServerSupabaseClient(env);
     await supabase
       .from("photos")
-      .update({ album_id: targetAlbumId })
+      .update({ album_id: validTarget })
       .eq("album_id", id);
     await supabase.from("albums").delete().eq("id", id);
   }
 
+  const location = validTarget ? `/albums/${validTarget}?msg=album-merged` : "/";
+
   return new Response(null, {
     status: 302,
-    headers: { Location: "/review?msg=album-merged" },
+    headers: { Location: location },
   });
 }

@@ -17,6 +17,8 @@ export async function POST(request: Request) {
   const files = formData
     .getAll("photos")
     .filter((f): f is File => f instanceof File);
+  const albumIdRaw = formData.get("album_id");
+  const albumId = typeof albumIdRaw === "string" && albumIdRaw ? albumIdRaw : null;
 
   if (files.length === 0) {
     return Response.json({ error: "업로드할 사진이 없어요." }, { status: 400 });
@@ -108,6 +110,7 @@ export async function POST(request: Request) {
           gps_lat: gpsLat,
           gps_lng: gpsLng,
           content_hash: contentHash,
+          album_id: albumId,
         });
 
         if (error) throw new Error(error.message);

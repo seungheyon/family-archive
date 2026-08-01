@@ -4,11 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
-const LINKS = [
-  { href: "/upload", label: "업로드" },
-  { href: "/review", label: "앨범 정리" },
-];
-
 export function Nav() {
   const pathname = usePathname();
 
@@ -25,23 +20,6 @@ export function Nav() {
       >
         가족 아카이브
       </Link>
-      {LINKS.map((link) => {
-        const active = pathname.startsWith(link.href);
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            aria-current={active ? "page" : undefined}
-            className={
-              active
-                ? "font-medium text-accent underline underline-offset-4"
-                : "text-muted hover:text-accent"
-            }
-          >
-            {link.label}
-          </Link>
-        );
-      })}
       <ThemeSwitcher />
     </nav>
   );

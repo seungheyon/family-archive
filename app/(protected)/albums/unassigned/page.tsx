@@ -1,13 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { AlbumGrid } from "@/components/AlbumGrid";
-import { AlbumManageMenu } from "@/components/AlbumManageMenu";
-import { UploadForm } from "@/components/UploadForm";
 import { getImageDimensions } from "@/lib/imageDimensions";
+
+export const metadata: Metadata = {
+  title: "미분류 사진",
+};
 
 interface PhotoRow {
   id: string;
@@ -20,40 +22,26 @@ interface AlbumOptionRow {
   title: string;
 }
 
-export default async function AlbumDetailPage({
-  params,
+export default async function UnassignedPhotosPage({
   searchParams,
 }: {
-  params: Promise<{ id: string }>;
   searchParams: Promise<{ msg?: string; count?: string }>;
 }) {
-  const { id } = await params;
   const { msg, count } = await searchParams;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
   const admin = await isAdmin(env.SESSION_SECRET);
 
-  const { data: album } = await supabase
-    .from("albums")
-    .select("id, title")
-    .eq("id", id)
-    .single();
-
-  if (!album) {
-    notFound();
-  }
-
-  const [{ data: photos }, { data: otherAlbums }] = await Promise.all([
+  const [{ data: photos }, { data: albums }] = await Promise.all([
     supabase
       .from("photos")
       .select("id, taken_at, r2_key")
-      .eq("album_id", id)
-      .order("taken_at", { ascending: true })
+      .is("album_id", null)
+      .order("uploaded_at", { ascending: false })
       .returns<PhotoRow[]>(),
     supabase
       .from("albums")
       .select("id, title")
-      .neq("id", id)
       .order("title", { ascending: true })
       .returns<AlbumOptionRow[]>(),
   ]);
@@ -73,34 +61,28 @@ export default async function AlbumDetailPage({
       >
         ← 앨범 목록
       </Link>
-
-      <div className="mb-8 flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold text-foreground">
-          {album.title}
-        </h1>
-        <AlbumManageMenu
-          albumId={album.id}
-          initialTitle={album.title}
-          otherAlbums={otherAlbums ?? []}
-          admin={admin}
-        />
-      </div>
+      <h1 className="mb-8 text-2xl font-semibold text-foreground">
+        미분류 사진
+      </h1>
 
       <FeedbackBanner msg={msg} count={count} />
 
-      <div className="mb-8">
-        <UploadForm albumId={album.id} />
-      </div>
+      <form action="/api/albums/auto-classify" method="POST" className="mb-8">
+        <button type="submit" className="btn-primary">
+          촬영일자 있는 사진 자동 분류
+        </button>
+        <p className="mt-2 text-xs text-muted">
+          촬영일자(EXIF)가 있는 사진을 날짜 간격 기준으로 새 앨범으로 묶어요.
+          촬영일자가 없는 사진은 아래에서 길게 눌러 선택한 뒤 직접 앨범으로
+          옮겨야 해요.
+        </p>
+      </form>
 
       {(!photos || photos.length === 0) && (
-        <p className="text-sm text-muted">이 앨범엔 아직 사진이 없어요.</p>
+        <p className="text-sm text-muted">미분류 사진이 없어요.</p>
       )}
 
-      <AlbumGrid
-        photos={photosWithDimensions}
-        albums={otherAlbums ?? []}
-        admin={admin}
-      />
+      <AlbumGrid photos={photosWithDimensions} albums={albums ?? []} admin={admin} />
     </div>
   );
 }

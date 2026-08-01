@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface UploadResult {
   filename: string;
@@ -8,7 +9,8 @@ interface UploadResult {
   error?: string;
 }
 
-export function UploadForm() {
+export function UploadForm({ albumId }: { albumId?: string }) {
+  const router = useRouter();
   const [status, setStatus] = useState<string>("");
   const [okCount, setOkCount] = useState(0);
   const [failures, setFailures] = useState<UploadResult[]>([]);
@@ -18,6 +20,7 @@ export function UploadForm() {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
+    if (albumId) formData.set("album_id", albumId);
     setSubmitting(true);
     setStatus("");
     setOkCount(0);
@@ -35,6 +38,7 @@ export function UploadForm() {
         setStatus("업로드에 실패했어요.");
       }
       form.reset();
+      if (succeeded > 0) router.refresh();
     } catch {
       setStatus("업로드 중 오류가 발생했어요.");
     } finally {

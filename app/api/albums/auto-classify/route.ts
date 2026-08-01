@@ -52,8 +52,8 @@ export async function POST() {
 
   const location =
     clusters.length === 0
-      ? "/review?msg=classify-empty"
-      : `/review?msg=classified&count=${clusters.length}`;
+      ? "/albums/unassigned?msg=classify-empty"
+      : `/albums/unassigned?msg=classified&count=${clusters.length}`;
 
   return new Response(null, { status: 302, headers: { Location: location } });
 }

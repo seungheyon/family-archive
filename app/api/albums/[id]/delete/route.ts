@@ -19,6 +19,6 @@ export async function POST(
 
   return new Response(null, {
     status: 302,
-    headers: { Location: "/review?msg=album-deleted" },
+    headers: { Location: "/?msg=album-deleted" },
   });
 }
