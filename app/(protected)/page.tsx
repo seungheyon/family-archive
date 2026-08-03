@@ -19,6 +19,17 @@ interface AlbumRow {
   photos: { count: number }[];
 }
 
+function formatDate(iso: string) {
+  const [y, m, d] = iso.split("-");
+  return `${y}.${m}.${d}`;
+}
+
+function formatDateRange(start: string, end: string) {
+  return start === end
+    ? formatDate(start)
+    : `${formatDate(start)} ~ ${formatDate(end)}`;
+}
+
 export default async function AlbumListPage({
   searchParams,
 }: {
@@ -44,10 +55,10 @@ export default async function AlbumListPage({
     albums?.filter((album) => (album.photos?.[0]?.count ?? 0) > 0) ?? [];
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
+    <div className="mx-auto max-w-3xl px-6 py-20">
       <ThemeHintBubble />
 
-      <h1 className="mb-8 text-2xl font-semibold text-foreground">앨범 목록</h1>
+      <h1 className="mb-10 text-2xl font-semibold text-foreground">앨범 목록</h1>
 
       <FeedbackBanner msg={msg} count={count} />
 
@@ -58,17 +69,24 @@ export default async function AlbumListPage({
         </p>
       )}
 
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-4">
         {visibleAlbums.map((album) => (
           <li key={album.id}>
             <Link
               href={`/albums/${album.id}`}
-              className="card flex items-center justify-between transition-colors hover:border-accent"
+              className="card flex items-center justify-between gap-4 rounded-2xl p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
             >
-              <span className="font-medium text-foreground">
-                {album.title}
-              </span>
-              <span className="text-sm text-muted">
+              <div className="flex min-w-0 flex-col gap-1">
+                <span className="truncate text-lg font-semibold text-foreground">
+                  {album.title}
+                </span>
+                {album.date_start && album.date_end && (
+                  <span className="text-sm text-muted">
+                    {formatDateRange(album.date_start, album.date_end)}
+                  </span>
+                )}
+              </div>
+              <span className="shrink-0 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
                 사진 {album.photos?.[0]?.count ?? 0}장
               </span>
             </Link>
@@ -77,7 +95,7 @@ export default async function AlbumListPage({
       </ul>
 
       {/* 앨범 목록보다 먼저 선택지를 던지지 않도록 의도적으로 목록 아래에 배치 */}
-      <div className="mt-8 flex flex-wrap justify-end gap-2">
+      <div className="mt-10 flex flex-wrap justify-end gap-2">
         <CreateAlbumButton />
         <QuickUploadButton />
         {!!unassignedCount && unassignedCount > 0 && (
