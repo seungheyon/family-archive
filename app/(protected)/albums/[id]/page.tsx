@@ -75,7 +75,7 @@ export default async function AlbumDetailPage({
       </Link>
 
       <div className="mb-8 flex items-center justify-between gap-2">
-        <h1 className="min-w-0 truncate text-2xl font-semibold text-foreground">
+        <h1 className="min-w-0 line-clamp-2 text-2xl font-semibold text-foreground">
           {album.title}
         </h1>
         <AlbumManageMenu

@@ -77,7 +77,7 @@ export default async function AlbumListPage({
               className="card flex items-center justify-between gap-4 rounded-2xl p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
             >
               <div className="flex min-w-0 flex-col gap-1">
-                <span className="truncate text-lg font-semibold text-foreground">
+                <span className="line-clamp-2 text-lg font-semibold text-foreground">
                   {album.title}
                 </span>
                 {album.date_start && album.date_end && (
