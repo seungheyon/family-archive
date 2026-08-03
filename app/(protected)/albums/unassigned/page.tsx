@@ -81,11 +81,12 @@ export default async function UnassignedPhotosPage({
         </p>
       </form>
 
-      {(!photos || photos.length === 0) && (
-        <p className="text-sm text-muted">미분류 사진이 없어요.</p>
-      )}
-
-      <AlbumGrid photos={photosWithDimensions} albums={albums ?? []} admin={admin} />
+      <AlbumGrid
+        photos={photosWithDimensions}
+        albums={albums ?? []}
+        admin={admin}
+        emptyMessage="미분류 사진이 없어요."
+      />
     </div>
   );
 }

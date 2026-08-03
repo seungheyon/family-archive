@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import "photoswipe/style.css";
 import { DOTS_ICON_HTML } from "@/components/DotsIcon";
+import { UploadForm } from "@/components/UploadForm";
 
 interface Photo {
   id: string;
@@ -25,10 +26,14 @@ export function AlbumGrid({
   photos,
   albums,
   admin,
+  albumId,
+  emptyMessage = "이 앨범엔 아직 사진이 없어요.",
 }: {
   photos: Photo[];
   albums: AlbumOption[];
   admin: boolean;
+  albumId?: string;
+  emptyMessage?: string;
 }) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +55,9 @@ export function AlbumGrid({
       gallery: container,
       children: "a",
       pswpModule: () => import("photoswipe"),
+      // 사진 바깥 어두운 배경을 탭하면 확대를 닫는다(라이브러리 기본값이지만, 의도를
+      // 명시적으로 남겨 향후 옵션 변경 시에도 이 동작이 실수로 꺼지지 않게 한다)
+      bgClickAction: "close",
     });
 
     lightbox.on("uiRegister", () => {
@@ -233,16 +241,21 @@ export function AlbumGrid({
   }
 
   return (
-    <div>
+    <div
+      className="album-frame"
+      onClick={(e) => {
+        // 사진(및 선택 툴바)이 아니라 프레임 안 빈 공간을 탭하면 선택 모드를 종료.
+        // 그리드 밖 여백(업로드 버튼 주변 등)까지 전부 포함해야 하므로 프레임 전체에
+        // 걸어두고, 사진/툴바 카드 위 클릭만 closest()로 걸러낸다.
+        if (!selectionMode) return;
+        const target = e.target as HTMLElement;
+        if (target.closest("[data-photo-id]") || target.closest(".card")) return;
+        exitSelectionMode();
+      }}
+    >
       <div
         ref={containerRef}
         className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
-        onClick={(e) => {
-          // 사진이 아니라 빈 공간(그리드 gap 등)을 탭하면 선택 모드를 종료
-          if (selectionMode && e.target === e.currentTarget) {
-            exitSelectionMode();
-          }
-        }}
       >
         {photos.map((photo) => (
           <a
@@ -287,6 +300,18 @@ export function AlbumGrid({
           </a>
         ))}
       </div>
+
+      {photos.length === 0 && (
+        <p className="mt-4 text-sm text-muted">{emptyMessage}</p>
+      )}
+
+      {/* 사진 목록보다 먼저 업로드 영역이 큰 자리를 차지하지 않도록 목록 아래, 버튼 하나로 축약.
+          미분류 사진 페이지처럼 특정 앨범이 없는 곳에서는 업로드 자체를 노출하지 않는다. */}
+      {albumId && (
+        <div className="mt-6">
+          <UploadForm albumId={albumId} />
+        </div>
+      )}
 
       {selectionMode && (
         <div className="card fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-wrap items-center gap-2">

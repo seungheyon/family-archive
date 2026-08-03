@@ -6,7 +6,6 @@ import { isAdmin } from "@/lib/auth";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { AlbumGrid } from "@/components/AlbumGrid";
 import { AlbumManageMenu } from "@/components/AlbumManageMenu";
-import { UploadForm } from "@/components/UploadForm";
 import { getImageDimensions } from "@/lib/imageDimensions";
 
 interface PhotoRow {
@@ -88,21 +87,12 @@ export default async function AlbumDetailPage({
 
       <FeedbackBanner msg={msg} count={count} />
 
-      <div className="album-frame">
-        <div className="mb-8">
-          <UploadForm albumId={album.id} />
-        </div>
-
-        {(!photos || photos.length === 0) && (
-          <p className="text-sm text-muted">이 앨범엔 아직 사진이 없어요.</p>
-        )}
-
-        <AlbumGrid
-          photos={photosWithDimensions}
-          albums={otherAlbums ?? []}
-          admin={admin}
-        />
-      </div>
+      <AlbumGrid
+        photos={photosWithDimensions}
+        albums={otherAlbums ?? []}
+        admin={admin}
+        albumId={album.id}
+      />
     </div>
   );
 }

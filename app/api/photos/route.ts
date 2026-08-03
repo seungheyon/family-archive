@@ -74,46 +74,42 @@ export async function POST(request: Request) {
           };
         }
 
+        // EXIF 촬영일자/GPS는 서로 무관한 별도 파싱이라 병렬로 돌린다(순차로 하면 같은
+        // 버퍼를 두 번 훑는 시간이 그대로 누적돼 업로드 체감 속도를 늦춘다).
+        const [dateResult, gpsResult] = await Promise.all([
+          exifr.parse(buffer, ["DateTimeOriginal"]).catch(() => null),
+          exifr.gps(buffer).catch(() => null),
+        ]);
+
         // EXIF 촬영일자 — 없으면 null (앨범 자동분류 대상에서 제외, 수동 분류로 폴백)
-        let takenAt: string | null = null;
-        try {
-          const tags = await exifr.parse(buffer, ["DateTimeOriginal"]);
-          if (tags?.DateTimeOriginal instanceof Date) {
-            takenAt = tags.DateTimeOriginal.toISOString();
-          }
-        } catch {
-          // EXIF 없음/파싱 실패
-        }
+        const takenAt =
+          dateResult?.DateTimeOriginal instanceof Date
+            ? dateResult.DateTimeOriginal.toISOString()
+            : null;
 
         // EXIF GPS — 없으면 null
-        let gpsLat: number | null = null;
-        let gpsLng: number | null = null;
-        try {
-          const gps = await exifr.gps(buffer);
-          if (gps) {
-            gpsLat = gps.latitude;
-            gpsLng = gps.longitude;
-          }
-        } catch {
-          // GPS 정보 없음
-        }
+        const gpsLat = gpsResult?.latitude ?? null;
+        const gpsLng = gpsResult?.longitude ?? null;
 
+        // R2 원본 저장과 DB insert도 서로 독립적인 쓰기라 병렬로 돌린다 — 실패 시 아래
+        // Promise.all이 즉시 reject해 catch로 넘어가므로 처리 자체는 기존과 동일하다.
         const r2Key = `photos/${crypto.randomUUID()}-${file.name}`;
-        await env.PHOTOS_BUCKET.put(r2Key, buffer, {
-          httpMetadata: { contentType: file.type || "application/octet-stream" },
-        });
+        const [, insertResult] = await Promise.all([
+          env.PHOTOS_BUCKET.put(r2Key, buffer, {
+            httpMetadata: { contentType: file.type || "application/octet-stream" },
+          }),
+          supabase.from("photos").insert({
+            r2_key: r2Key,
+            original_filename: file.name,
+            taken_at: takenAt,
+            gps_lat: gpsLat,
+            gps_lng: gpsLng,
+            content_hash: contentHash,
+            album_id: albumId,
+          }),
+        ]);
 
-        const { error } = await supabase.from("photos").insert({
-          r2_key: r2Key,
-          original_filename: file.name,
-          taken_at: takenAt,
-          gps_lat: gpsLat,
-          gps_lng: gpsLng,
-          content_hash: contentHash,
-          album_id: albumId,
-        });
-
-        if (error) throw new Error(error.message);
+        if (insertResult.error) throw new Error(insertResult.error.message);
 
         return { filename: file.name, ok: true };
       } catch (err) {
