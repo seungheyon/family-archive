@@ -95,7 +95,7 @@ export default async function AlbumListPage({
       </ul>
 
       {/* 앨범 목록보다 먼저 선택지를 던지지 않도록 의도적으로 목록 아래에 배치 */}
-      <div className="mt-10 flex flex-wrap justify-end gap-2">
+      <div className="mt-10 flex flex-col items-start gap-3">
         <CreateAlbumButton />
         <QuickUploadButton />
         {!!unassignedCount && unassignedCount > 0 && (
