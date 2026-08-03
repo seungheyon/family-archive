@@ -47,24 +47,13 @@ export default async function AlbumListPage({
     <div className="mx-auto max-w-3xl px-6 py-16">
       <ThemeHintBubble />
 
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">앨범 목록</h1>
-        <div className="flex flex-wrap justify-end gap-2">
-          <CreateAlbumButton />
-          <QuickUploadButton />
-          {!!unassignedCount && unassignedCount > 0 && (
-            <Link href="/albums/unassigned" className="btn-tinted">
-              앨범에 포함되지 않은 사진이 있어요!
-            </Link>
-          )}
-        </div>
-      </div>
+      <h1 className="mb-8 text-2xl font-semibold text-foreground">앨범 목록</h1>
 
       <FeedbackBanner msg={msg} count={count} />
 
       {visibleAlbums.length === 0 && (
         <p className="text-sm text-muted">
-          아직 정리된 앨범이 없어요. 위에서 앨범을 만들고 들어가서 사진을
+          아직 정리된 앨범이 없어요. 아래에서 앨범을 만들고 들어가서 사진을
           업로드해 보세요.
         </p>
       )}
@@ -86,6 +75,17 @@ export default async function AlbumListPage({
           </li>
         ))}
       </ul>
+
+      {/* 앨범 목록보다 먼저 선택지를 던지지 않도록 의도적으로 목록 아래에 배치 */}
+      <div className="mt-8 flex flex-wrap justify-end gap-2">
+        <CreateAlbumButton />
+        <QuickUploadButton />
+        {!!unassignedCount && unassignedCount > 0 && (
+          <Link href="/albums/unassigned" className="btn-tinted">
+            앨범에 포함되지 않은 사진이 있어요!
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
