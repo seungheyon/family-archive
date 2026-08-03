@@ -142,6 +142,12 @@ body {
     @apply right-6;
   }
 
+  /* 특정 요소를 가리킬 필요 없는(예: 화면 최하단 고정) 알림용 — 화살표 없는 둥근 사각형 */
+  .toast-flat {
+    @apply relative inline-block rounded-2xl bg-accent px-4 py-3 text-sm font-medium text-accent-foreground shadow-lg;
+    animation: pop-in 0.35s ease-out;
+  }
+
   .btn-primary {
     @apply inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-accent px-4 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40;
   }
