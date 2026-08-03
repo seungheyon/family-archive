@@ -175,6 +175,199 @@ body {
   .select {
     @apply h-10 w-full min-w-0 max-w-56 shrink rounded-lg border border-border bg-surface px-3 text-foreground;
   }
+
+  /* 책장: 부모님 세대도 한눈에 "책장"으로 알아볼 수 있도록 스큐어모피즘으로 구현.
+     나무 톤은 테마(살구/하늘/분홍/연두)와 무관하게 항상 동일 — 책장 자체는 가구이지
+     앱 UI 크롬이 아니므로 테마 전환 대상에서 제외. */
+  .bookshelf {
+    --shelf-book-h: 176px;
+    --shelf-row-gap: 36px;
+    --shelf-edge-h: 8px;
+    position: relative;
+    border-radius: 1.5rem;
+    padding: 28px 18px 16px;
+    background-color: #5c3c26;
+    background-image:
+      /* 선반 전면 엣지: 책 높이 바로 아래에 하이라이트+그림자로 반복 배치 */
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent var(--shelf-book-h),
+        rgba(255, 214, 170, 0.4) var(--shelf-book-h),
+        rgba(255, 214, 170, 0.4) calc(var(--shelf-book-h) + 3px),
+        rgba(0, 0, 0, 0.4) calc(var(--shelf-book-h) + 3px),
+        rgba(0, 0, 0, 0.4) calc(var(--shelf-book-h) + var(--shelf-edge-h)),
+        transparent calc(var(--shelf-book-h) + var(--shelf-edge-h)),
+        transparent calc(var(--shelf-book-h) + var(--shelf-row-gap))
+      ),
+      /* 나무결 미세 텍스처 */
+      repeating-linear-gradient(
+        87deg,
+        rgba(255, 255, 255, 0.05) 0px,
+        rgba(255, 255, 255, 0.05) 1px,
+        transparent 1px,
+        transparent 4px
+      ),
+      linear-gradient(160deg, #7a5236 0%, #5c3c26 55%, #462e18 100%);
+    background-size:
+      100% calc(var(--shelf-book-h) + var(--shelf-row-gap)),
+      100% 100%,
+      100% 100%;
+    box-shadow:
+      inset 0 2px 6px rgba(0, 0, 0, 0.45),
+      0 10px 28px rgba(0, 0, 0, 0.28);
+  }
+
+  .bookshelf-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    column-gap: 14px;
+    row-gap: var(--shelf-row-gap);
+  }
+
+  /* 책 한 권 = 앨범 하나. 큰 터치 영역(가로 112px×세로 176px)을 확보해 부모님 세대도
+     쉽게 탭할 수 있게 한다 — 실사용 중 겪은 "긴 텍스트 nowrap → 모바일 잘림" 버그의
+     재발을 막기 위해 제목은 항상 .book-label 안에서 line-clamp로만 줄인다(nowrap 금지). */
+  .book-spine {
+    position: relative;
+    width: 112px;
+    height: var(--shelf-book-h);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 8px;
+    border-radius: 5px 5px 2px 2px;
+    color: #fff;
+    background-color: var(--book-color, #7a4a3a);
+    background-image: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.16),
+      rgba(0, 0, 0, 0.32) 65%
+    );
+    box-shadow:
+      inset -7px 0 12px rgba(0, 0, 0, 0.28),
+      inset 5px 0 10px rgba(255, 255, 255, 0.14),
+      4px 5px 10px rgba(0, 0, 0, 0.38);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .book-spine:hover,
+  .book-spine:active {
+    transform: translateY(-6px);
+    box-shadow:
+      inset -7px 0 12px rgba(0, 0, 0, 0.28),
+      inset 5px 0 10px rgba(255, 255, 255, 0.14),
+      6px 10px 18px rgba(0, 0, 0, 0.42);
+  }
+
+  /* 책 위/아래 페이지 단면(책배) 표현 */
+  .book-spine::before,
+  .book-spine::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    height: 6px;
+    border-radius: 2px;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.92) 0px,
+      rgba(255, 255, 255, 0.92) 1px,
+      rgba(205, 195, 178, 0.92) 1px,
+      rgba(205, 195, 178, 0.92) 2px
+    );
+  }
+  .book-spine::before {
+    top: 3px;
+  }
+  .book-spine::after {
+    bottom: 3px;
+  }
+
+  /* 표지 라벨(금박 패널 느낌) — 제목은 반드시 이 안에서 line-clamp로만 처리 */
+  .book-label {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.14);
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    padding: 6px 4px;
+    border-radius: 2px;
+  }
+
+  /* 앨범을 펼친 모양의 프레임 — 나무 책장과 마찬가지로 테마와 무관하게 항상 따뜻한
+     종이색 고정(사진 위/주변 오버레이는 테마 일치보다 일관된 대비가 우선이라는 기존
+     방침과 동일 근거). */
+  .album-frame {
+    position: relative;
+    border-radius: 1.75rem;
+    background: #fbf6ec;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow:
+      inset 0 0 0 8px rgba(255, 255, 255, 0.55),
+      0 14px 34px rgba(0, 0, 0, 0.16);
+    padding: 20px 16px;
+  }
+
+  @media (min-width: 768px) {
+    .album-frame {
+      padding: 32px 40px;
+    }
+    .album-frame::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 50%;
+      width: 44px;
+      margin-left: -22px;
+      pointer-events: none;
+      background: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.1),
+        rgba(0, 0, 0, 0.02) 35%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.02) 65%,
+        rgba(0, 0, 0, 0.1)
+      );
+    }
+  }
+
+  /* 사진 한 장 = 앨범 페이지에 끼운 사진 한 장. 흰 여백(마운트)과 모서리 코너 스티커로 표현 */
+  .photo-slot {
+    position: relative;
+    display: block;
+    padding: 5px;
+    background: #ffffff;
+    border-radius: 6px;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.18),
+      0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: transform 0.15s ease;
+  }
+
+  .photo-slot:hover {
+    transform: translateY(-2px) rotate(-0.4deg);
+  }
+
+  .photo-slot::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 50%, transparent 50%);
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.2));
+    pointer-events: none;
+    z-index: 2;
+  }
 }
 
 /*
@@ -184,7 +377,7 @@ body {
   선택자보다 살짝 더 구체적으로 만들어 로드 순서와 무관하게 항상 이 규칙이 이긴다.
 */
 .pswp .pswp__top-bar {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(251, 246, 236, 0.94);
   --pswp-icon-color: #2b2b2b;
   --pswp-icon-color-secondary: #ffffff;
 }

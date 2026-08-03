@@ -93,7 +93,7 @@ export function AlbumGrid({
     el.style.gap = "4px";
     el.style.padding = "8px";
     el.style.borderRadius = "12px";
-    el.style.background = "#ffffff";
+    el.style.background = "#fbf6ec";
     el.style.boxShadow = "0 4px 16px rgba(0,0,0,0.25)";
   }
 
@@ -106,7 +106,7 @@ export function AlbumGrid({
     b.style.padding = "8px 16px";
     b.style.fontSize = "14px";
     b.style.border = "1px solid #e5e5e5";
-    b.style.background = "#ffffff";
+    b.style.background = "#fbf6ec";
     b.style.color = danger ? "#dc2626" : "#22262b";
     return b;
   }
@@ -251,7 +251,7 @@ export function AlbumGrid({
             data-photo-id={photo.id}
             data-pswp-width={photo.width ?? FALLBACK_DIMENSION}
             data-pswp-height={photo.height ?? FALLBACK_DIMENSION}
-            className={`relative block ${
+            className={`photo-slot ${
               selectionMode && selected.has(photo.id)
                 ? "ring-4 ring-accent"
                 : ""

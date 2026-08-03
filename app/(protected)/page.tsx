@@ -30,6 +30,17 @@ function formatDateRange(start: string, end: string) {
     : `${formatDate(start)} ~ ${formatDate(end)}`;
 }
 
+// 실제 책장처럼 책마다 표지색이 다르게 보이도록 순환시키는 팔레트. 앱 테마(살구/하늘/분홍/연두)와는
+// 무관 — 책 표지색은 가구/소품의 색이지 테마가 적용되는 UI 크롬이 아니라고 판단.
+const BOOK_COLORS = [
+  "#8B3A3A",
+  "#2F4B5C",
+  "#3F5B3F",
+  "#8A6D3B",
+  "#5C3A5C",
+  "#3A6B6B",
+];
+
 export default async function AlbumListPage({
   searchParams,
 }: {
@@ -69,30 +80,34 @@ export default async function AlbumListPage({
         </p>
       )}
 
-      <ul className="flex flex-col gap-4">
-        {visibleAlbums.map((album) => (
-          <li key={album.id}>
-            <Link
-              href={`/albums/${album.id}`}
-              className="card flex items-center justify-between gap-4 rounded-2xl p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
-            >
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="line-clamp-2 text-lg font-semibold text-foreground">
-                  {album.title}
+      {visibleAlbums.length > 0 && (
+        <div className="bookshelf">
+          <div className="bookshelf-grid">
+            {visibleAlbums.map((album, i) => (
+              <Link
+                key={album.id}
+                href={`/albums/${album.id}`}
+                className="book-spine"
+                style={{ "--book-color": BOOK_COLORS[i % BOOK_COLORS.length] } as React.CSSProperties}
+              >
+                <span className="book-label">
+                  <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
+                    {album.title}
+                  </span>
                 </span>
                 {album.date_start && album.date_end && (
-                  <span className="text-sm text-muted">
+                  <span className="text-[10px] text-white/75">
                     {formatDateRange(album.date_start, album.date_end)}
                   </span>
                 )}
-              </div>
-              <span className="shrink-0 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
-                사진 {album.photos?.[0]?.count ?? 0}장
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
+                  사진 {album.photos?.[0]?.count ?? 0}장
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 앨범 목록보다 먼저 선택지를 던지지 않도록 의도적으로 목록 아래에 배치 */}
       <div className="mt-10 flex flex-col items-start gap-3">
