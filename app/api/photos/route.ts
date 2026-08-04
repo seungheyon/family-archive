@@ -3,6 +3,7 @@ import exifr from "exifr";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
 import { sha256Hex } from "@/lib/hash";
+import { thumbKeyForPhoto } from "@/lib/photoKeys";
 
 const MAX_FILE_BYTES = 30 * 1024 * 1024; // 30MB
 
@@ -118,10 +119,14 @@ export async function POST(request: Request) {
         const thumbFile = thumbEntry instanceof File ? thumbEntry : null;
         const dims = dimensionsByIndex.get(index) ?? null;
 
+        // 사진 id를 여기서 미리 정한다 — 썸네일 키를 id에서 유도하는 규칙(lib/photoKeys)을
+        // 쓰려면 insert 전에 id를 알아야 한다.
+        const photoId = crypto.randomUUID();
+
         // R2 원본/썸네일 저장과 DB insert는 서로 독립적인 쓰기라 병렬로 돌린다 — 실패 시
         // Promise.all이 즉시 reject해 catch로 넘어가므로 처리 자체는 기존과 동일하다.
         const r2Key = `photos/${crypto.randomUUID()}-${file.name}`;
-        const thumbKey = thumbFile ? `thumbs/${crypto.randomUUID()}.jpg` : null;
+        const thumbKey = thumbFile ? thumbKeyForPhoto(photoId) : null;
 
         const writes: Promise<unknown>[] = [
           env.PHOTOS_BUCKET.put(r2Key, buffer, {
@@ -139,6 +144,7 @@ export async function POST(request: Request) {
         }
 
         const insertPromise = supabase.from("photos").insert({
+          id: photoId,
           r2_key: r2Key,
           original_filename: file.name,
           taken_at: takenAt,

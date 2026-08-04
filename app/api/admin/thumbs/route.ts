@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
+import { thumbKeyForPhoto } from "@/lib/photoKeys";
 
 /**
  * 썸네일 도입(2026-08-04) 이전에 올라온 사진들을 위한 1회성 보정 창구.
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "사진을 찾을 수 없어요." }, { status: 404 });
   }
 
-  const thumbKey = `thumbs/${crypto.randomUUID()}.jpg`;
+  const thumbKey = thumbKeyForPhoto(id);
   await env.PHOTOS_BUCKET.put(thumbKey, await thumb.arrayBuffer(), {
     httpMetadata: { contentType: "image/jpeg" },
   });
