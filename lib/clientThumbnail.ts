@@ -19,7 +19,7 @@ export interface ThumbnailResult {
   height: number;
 }
 
-export async function createThumbnail(file: File): Promise<ThumbnailResult | null> {
+export async function createThumbnail(file: Blob): Promise<ThumbnailResult | null> {
   if (typeof createImageBitmap !== "function") return null;
 
   let bitmap: ImageBitmap;

@@ -6,6 +6,8 @@ import { ThemeHintBubble } from "@/components/ThemeHintBubble";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { CreateAlbumButton } from "@/components/CreateAlbumButton";
 import { QuickUploadButton } from "@/components/QuickUploadButton";
+import { BackfillThumbsButton } from "@/components/BackfillThumbsButton";
+import { isAdmin } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "앨범 목록",
@@ -49,6 +51,7 @@ export default async function AlbumListPage({
   const { msg, count } = await searchParams;
   const { env } = await getCloudflareContext({ async: true });
   const supabase = createServerSupabaseClient(env);
+  const admin = await isAdmin(env.SESSION_SECRET);
 
   const [{ data: albums }, { count: unassignedCount }] = await Promise.all([
     supabase
@@ -118,6 +121,7 @@ export default async function AlbumListPage({
             앨범에 포함되지 않은 사진이 있어요!
           </Link>
         )}
+        {admin && <BackfillThumbsButton />}
       </div>
     </div>
   );
