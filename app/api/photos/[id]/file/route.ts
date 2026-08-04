@@ -22,7 +22,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { env } = await getCloudflareContext({ async: true });
+  const { env, ctx } = await getCloudflareContext({ async: true });
 
   // 캐시를 보기 전에 반드시 인증부터 확인한다 — 캐시가 인증 게이트를 우회하면 안 된다.
   if (!(await isAuthenticated(env.SESSION_SECRET))) {
@@ -73,7 +73,10 @@ export async function GET(
   }
 
   const response = imageResponse(object);
-  // 응답 본문은 한 번만 읽을 수 있으므로 복제해서 캐시에 넣는다.
-  await cache.put(cacheKey, response.clone());
+  // 캐시 쓰기를 기다리지 않고 응답을 먼저 돌려준다 — await하면 캐시 미적중인 첫 요청이
+  // 캐시 저장이 끝날 때까지 붙잡혀서, 캐시를 붙인 대가를 사용자가 그대로 체감하게 된다.
+  // waitUntil로 넘기면 응답을 보낸 뒤 백그라운드에서 저장이 끝난다.
+  // (본문은 한 번만 읽을 수 있으므로 복제해서 넣는다.)
+  ctx.waitUntil(cache.put(cacheKey, response.clone()));
   return response;
 }
