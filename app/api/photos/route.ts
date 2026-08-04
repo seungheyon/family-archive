@@ -20,6 +20,27 @@ export async function POST(request: Request) {
   const albumIdRaw = formData.get("album_id");
   const albumId = typeof albumIdRaw === "string" && albumIdRaw ? albumIdRaw : null;
 
+  // 브라우저가 계산해서 보낸 실제 표시 크기(EXIF 회전 반영). 없으면 null로 두고,
+  // 조회 시점에 폴백 처리한다 — 서버가 R2를 다시 읽어 헤더를 파싱하지 않는다.
+  const dimensionsByIndex = new Map<number, { width: number; height: number }>();
+  const dimensionsRaw = formData.get("dimensions");
+  if (typeof dimensionsRaw === "string") {
+    try {
+      const parsed = JSON.parse(dimensionsRaw) as {
+        index: number;
+        width: number;
+        height: number;
+      }[];
+      for (const d of parsed) {
+        if (Number.isFinite(d.width) && Number.isFinite(d.height)) {
+          dimensionsByIndex.set(d.index, { width: d.width, height: d.height });
+        }
+      }
+    } catch {
+      // 형식이 깨졌으면 크기 정보 없이 진행
+    }
+  }
+
   if (files.length === 0) {
     return Response.json({ error: "업로드할 사진이 없어요." }, { status: 400 });
   }
@@ -30,7 +51,7 @@ export async function POST(request: Request) {
   const seenHashes = new Set<string>();
 
   const results = await Promise.all(
-    files.map(async (file) => {
+    files.map(async (file, index) => {
       try {
         if (!file.type.startsWith("image/")) {
           return {
@@ -91,22 +112,48 @@ export async function POST(request: Request) {
         const gpsLat = gpsResult?.latitude ?? null;
         const gpsLng = gpsResult?.longitude ?? null;
 
-        // R2 원본 저장과 DB insert도 서로 독립적인 쓰기라 병렬로 돌린다 — 실패 시 아래
+        // 브라우저가 만들어 보낸 썸네일(있으면). 그리드에서 원본 대신 이걸 서빙해
+        // 4~5MB짜리 원본을 썸네일 자리에 내려받는 낭비를 없앤다.
+        const thumbEntry = formData.get(`thumb_${index}`);
+        const thumbFile = thumbEntry instanceof File ? thumbEntry : null;
+        const dims = dimensionsByIndex.get(index) ?? null;
+
+        // R2 원본/썸네일 저장과 DB insert는 서로 독립적인 쓰기라 병렬로 돌린다 — 실패 시
         // Promise.all이 즉시 reject해 catch로 넘어가므로 처리 자체는 기존과 동일하다.
         const r2Key = `photos/${crypto.randomUUID()}-${file.name}`;
-        const [, insertResult] = await Promise.all([
+        const thumbKey = thumbFile ? `thumbs/${crypto.randomUUID()}.jpg` : null;
+
+        const writes: Promise<unknown>[] = [
           env.PHOTOS_BUCKET.put(r2Key, buffer, {
             httpMetadata: { contentType: file.type || "application/octet-stream" },
           }),
-          supabase.from("photos").insert({
-            r2_key: r2Key,
-            original_filename: file.name,
-            taken_at: takenAt,
-            gps_lat: gpsLat,
-            gps_lng: gpsLng,
-            content_hash: contentHash,
-            album_id: albumId,
-          }),
+        ];
+        if (thumbFile && thumbKey) {
+          writes.push(
+            thumbFile.arrayBuffer().then((thumbBuffer) =>
+              env.PHOTOS_BUCKET.put(thumbKey, thumbBuffer, {
+                httpMetadata: { contentType: "image/jpeg" },
+              }),
+            ),
+          );
+        }
+
+        const insertPromise = supabase.from("photos").insert({
+          r2_key: r2Key,
+          original_filename: file.name,
+          taken_at: takenAt,
+          gps_lat: gpsLat,
+          gps_lng: gpsLng,
+          content_hash: contentHash,
+          album_id: albumId,
+          width: dims?.width ?? null,
+          height: dims?.height ?? null,
+          thumb_key: thumbKey,
+        });
+
+        const [, insertResult] = await Promise.all([
+          Promise.all(writes),
+          insertPromise,
         ]);
 
         if (insertResult.error) throw new Error(insertResult.error.message);

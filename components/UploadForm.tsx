@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toast } from "@/components/Toast";
+import { createThumbnail } from "@/lib/clientThumbnail";
 
 interface UploadResult {
   filename: string;
@@ -12,7 +13,6 @@ interface UploadResult {
 
 export function UploadForm({ albumId }: { albumId?: string }) {
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string>("");
   const [okCount, setOkCount] = useState(0);
@@ -20,17 +20,32 @@ export function UploadForm({ albumId }: { albumId?: string }) {
   const [failures, setFailures] = useState<UploadResult[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    if (albumId) formData.set("album_id", albumId);
+  async function handleFiles(fileList: FileList | null) {
+    const files = Array.from(fileList ?? []);
+    if (files.length === 0) return;
+
     setSubmitting(true);
     setStatus("");
     setOkCount(0);
     setFailures([]);
 
     try {
+      const formData = new FormData();
+      if (albumId) formData.set("album_id", albumId);
+
+      // 원본은 그대로 올리되, 썸네일과 실제 표시 크기를 함께 보내 서버가 R2를 다시 읽지
+      // 않아도 되게 한다. 썸네일 생성이 실패한 파일은 인덱스만 빠지고 원본은 정상 업로드된다.
+      const dimensions: { index: number; width: number; height: number }[] = [];
+      for (const [index, file] of files.entries()) {
+        formData.append("photos", file);
+        const thumb = await createThumbnail(file);
+        if (thumb) {
+          formData.append(`thumb_${index}`, thumb.blob, `thumb_${index}.jpg`);
+          dimensions.push({ index, width: thumb.width, height: thumb.height });
+        }
+      }
+      formData.set("dimensions", JSON.stringify(dimensions));
+
       const res = await fetch("/api/photos", { method: "POST", body: formData });
       const data = (await res.json()) as { results?: UploadResult[] };
       const results = data.results ?? [];
@@ -41,7 +56,6 @@ export function UploadForm({ albumId }: { albumId?: string }) {
       if (succeeded === 0 && failed.length > 0) {
         setStatus("업로드에 실패했어요.");
       }
-      form.reset();
       if (succeeded > 0) {
         setToastKey((k) => k + 1);
         router.refresh();
@@ -50,25 +64,20 @@ export function UploadForm({ albumId }: { albumId?: string }) {
       setStatus("업로드 중 오류가 발생했어요.");
     } finally {
       setSubmitting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
   return (
-    <form
-      ref={formRef}
-      onSubmit={handleSubmit}
-      className="flex w-full min-w-0 flex-col items-center gap-3"
-    >
+    <div className="flex w-full min-w-0 flex-col items-center gap-3">
       {/* 파일 선택창+업로드 버튼 2단계 대신, 버튼 하나로 선택과 동시에 바로 업로드되게 한다 */}
       <input
         ref={fileInputRef}
         type="file"
-        name="photos"
         accept="image/*"
         multiple
-        required
         className="hidden"
-        onChange={() => formRef.current?.requestSubmit()}
+        onChange={(e) => handleFiles(e.target.files)}
       />
       <button
         type="button"
@@ -95,6 +104,6 @@ export function UploadForm({ albumId }: { albumId?: string }) {
           ))}
         </ul>
       )}
-    </form>
+    </div>
   );
 }

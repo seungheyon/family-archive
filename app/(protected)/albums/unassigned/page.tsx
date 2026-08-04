@@ -5,7 +5,6 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { AlbumGrid } from "@/components/AlbumGrid";
-import { getImageDimensions } from "@/lib/imageDimensions";
 import { DeleteButton } from "@/components/DeleteButton";
 
 export const metadata: Metadata = {
@@ -15,7 +14,9 @@ export const metadata: Metadata = {
 interface PhotoRow {
   id: string;
   taken_at: string | null;
-  r2_key: string;
+  width: number | null;
+  height: number | null;
+  thumb_key: string | null;
 }
 
 interface AlbumOptionRow {
@@ -36,7 +37,7 @@ export default async function UnassignedPhotosPage({
   const [{ data: photos }, { data: albums }] = await Promise.all([
     supabase
       .from("photos")
-      .select("id, taken_at, r2_key")
+      .select("id, taken_at, width, height, thumb_key")
       .is("album_id", null)
       .order("uploaded_at", { ascending: false })
       .returns<PhotoRow[]>(),
@@ -47,12 +48,13 @@ export default async function UnassignedPhotosPage({
       .returns<AlbumOptionRow[]>(),
   ]);
 
-  const photosWithDimensions = await Promise.all(
-    (photos ?? []).map(async (photo) => {
-      const dims = await getImageDimensions(env.PHOTOS_BUCKET, photo.r2_key);
-      return { id: photo.id, width: dims?.width, height: dims?.height };
-    }),
-  );
+  // 앨범 상세와 같은 이유로 R2를 읽지 않고 DB에 저장된 크기를 그대로 쓴다.
+  const photosWithDimensions = (photos ?? []).map((photo) => ({
+    id: photo.id,
+    width: photo.width ?? undefined,
+    height: photo.height ?? undefined,
+    hasThumb: !!photo.thumb_key,
+  }));
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">

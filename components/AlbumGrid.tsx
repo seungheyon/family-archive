@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import "photoswipe/style.css";
@@ -11,6 +11,7 @@ interface Photo {
   id: string;
   width?: number;
   height?: number;
+  hasThumb?: boolean;
 }
 
 const FALLBACK_DIMENSION = 1600;
@@ -20,7 +21,7 @@ interface AlbumOption {
   title: string;
 }
 
-const LONG_PRESS_MS = 500;
+const LONG_PRESS_MS = 400;
 
 export function AlbumGrid({
   photos,
@@ -40,11 +41,18 @@ export function AlbumGrid({
   const lightboxRef = useRef<PhotoSwipeLightbox | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
+  const suppressNextClick = useRef(false);
 
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [movePickerOpen, setMovePickerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  const exitSelectionMode = useCallback(() => {
+    setSelectionMode(false);
+    setSelected(new Set());
+    setMovePickerOpen(false);
+  }, []);
 
   // PhotoSwipe는 선택 모드가 아닐 때만 초기화 — 선택 모드에서는 탭이 선택 토글로만 동작해야 함
   useEffect(() => {
@@ -55,9 +63,20 @@ export function AlbumGrid({
       gallery: container,
       children: "a",
       pswpModule: () => import("photoswipe"),
-      // 사진 바깥 어두운 배경을 탭하면 확대를 닫는다(라이브러리 기본값이지만, 의도를
-      // 명시적으로 남겨 향후 옵션 변경 시에도 이 동작이 실수로 꺼지지 않게 한다)
+      // 마우스 클릭 경로: 사진 바깥 어두운 배경을 클릭하면 닫는다.
       bgClickAction: "close",
+      // 터치 경로: PhotoSwipe는 탭을 bgClick이 아니라 tapAction으로만 처리하고,
+      // 기본값이 'toggle-controls'라 배경을 탭해도 닫히지 않았다(라이브러리 소스 확인).
+      // 탭 지점이 사진(.pswp__img)이 아니면 닫고, 사진 위면 기존처럼 컨트롤을 토글한다.
+      tapAction: (_point, originalEvent) => {
+        const target = originalEvent.target as HTMLElement | null;
+        const pswp = lightboxRef.current?.pswp;
+        if (target && !target.classList.contains("pswp__img")) {
+          pswp?.close();
+          return;
+        }
+        pswp?.element?.classList.toggle("pswp--ui-visible");
+      },
     });
 
     lightbox.on("uiRegister", () => {
@@ -86,6 +105,22 @@ export function AlbumGrid({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectionMode, photos.length]);
+
+  // 선택 모드에서 사진/툴바가 아닌 곳을 탭하면 선택 해제. 문서 전체에 걸어야
+  // 앨범 프레임 바깥(미분류 페이지의 상단 안내문 등)을 탭해도 해제된다.
+  useEffect(() => {
+    if (!selectionMode) return;
+    function onDocClick(e: MouseEvent) {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest("[data-photo-id]") || target.closest("[data-selection-ui]")) {
+        return;
+      }
+      exitSelectionMode();
+    }
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, [selectionMode, exitSelectionMode]);
 
   // 라이트박스 위에 뜨는 팝업이라 앱 테마(라이트/다크)를 따라가지 않고 항상 밝은 배경으로 고정 —
   // 사진 위 오버레이는 일관된 대비가 테마 일치보다 중요하다고 판단(상단바와 동일한 방침).
@@ -160,18 +195,14 @@ export function AlbumGrid({
     setTimeout(() => document.addEventListener("click", () => menu.remove(), { once: true }), 0);
   }
 
-  async function movePhotos(ids: string[], albumId: string) {
+  async function movePhotos(ids: string[], targetAlbumId: string) {
     setBusy(true);
     try {
-      await Promise.all(
-        ids.map((id) =>
-          fetch(`/api/photos/${id}/assign`, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ album_id: albumId }),
-          }),
-        ),
-      );
+      await fetch("/api/photos/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "move", ids, albumId: targetAlbumId }),
+      });
       exitSelectionMode();
       router.refresh();
     } finally {
@@ -182,26 +213,16 @@ export function AlbumGrid({
   async function deletePhotos(ids: string[]) {
     setBusy(true);
     try {
-      await Promise.all(
-        ids.map((id) =>
-          fetch(`/api/photos/${id}/delete`, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ redirect_to: window.location.pathname }),
-          }),
-        ),
-      );
+      await fetch("/api/photos/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", ids }),
+      });
       exitSelectionMode();
       router.refresh();
     } finally {
       setBusy(false);
     }
-  }
-
-  function exitSelectionMode() {
-    setSelectionMode(false);
-    setSelected(new Set());
-    setMovePickerOpen(false);
   }
 
   function toggleSelected(id: string) {
@@ -215,8 +236,14 @@ export function AlbumGrid({
 
   function startPress(id: string) {
     longPressFired.current = false;
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+    // 이미 선택 모드면 롱프레스를 아예 걸지 않는다. 예전에는 여기서 선택 목록을
+    // [방금 누른 것] 하나로 덮어써서, 여러 장 고르는 중 조금 오래 누르면 그때까지
+    // 고른 게 전부 풀리는 버그가 있었다.
+    if (selectionMode) return;
     pressTimer.current = setTimeout(() => {
       longPressFired.current = true;
+      suppressNextClick.current = true;
       setSelectionMode(true);
       setSelected(new Set([id]));
     }, LONG_PRESS_MS);
@@ -227,9 +254,9 @@ export function AlbumGrid({
   }
 
   function handleThumbClick(e: React.MouseEvent, id: string) {
-    if (longPressFired.current) {
-      // 롱프레스가 이미 발동했으면 이번 클릭(눌렀다 뗄 때 같이 발생)은 무시
-      longPressFired.current = false;
+    if (suppressNextClick.current) {
+      // 롱프레스로 방금 선택 모드에 진입했으면, 손을 뗄 때 따라오는 클릭은 무시
+      suppressNextClick.current = false;
       e.preventDefault();
       return;
     }
@@ -240,19 +267,10 @@ export function AlbumGrid({
     // 선택 모드가 아니면 기본 동작(PhotoSwipe 오픈)을 그대로 둔다
   }
 
+  const allSelected = photos.length > 0 && selected.size === photos.length;
+
   return (
-    <div
-      className="album-frame"
-      onClick={(e) => {
-        // 사진(및 선택 툴바)이 아니라 프레임 안 빈 공간을 탭하면 선택 모드를 종료.
-        // 그리드 밖 여백(업로드 버튼 주변 등)까지 전부 포함해야 하므로 프레임 전체에
-        // 걸어두고, 사진/툴바 카드 위 클릭만 closest()로 걸러낸다.
-        if (!selectionMode) return;
-        const target = e.target as HTMLElement;
-        if (target.closest("[data-photo-id]") || target.closest(".card")) return;
-        exitSelectionMode();
-      }}
-    >
+    <div className="album-frame">
       <div
         ref={containerRef}
         className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
@@ -274,15 +292,19 @@ export function AlbumGrid({
             onMouseLeave={cancelPress}
             onTouchStart={() => startPress(photo.id)}
             onTouchEnd={cancelPress}
+            onTouchMove={cancelPress}
             onClick={(e) => handleThumbClick(e, photo.id)}
             onContextMenu={(e) => e.preventDefault()}
             style={{ WebkitTouchCallout: "none", userSelect: "none" }}
           >
+            {/* 그리드에는 썸네일만 내려받는다. 썸네일이 없는 예전 사진은 서버가 원본으로
+                폴백하므로 URL은 동일하게 유지해도 안전하다. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`/api/photos/${photo.id}/file`}
+              src={`/api/photos/${photo.id}/file?variant=thumb`}
               alt=""
               loading="lazy"
+              decoding="async"
               draggable={false}
               className="aspect-square w-full rounded-md object-cover"
             />
@@ -314,8 +336,21 @@ export function AlbumGrid({
       )}
 
       {selectionMode && (
-        <div className="card fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-wrap items-center gap-2">
+        <div
+          data-selection-ui
+          className="card fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-wrap items-center gap-2"
+        >
           <span className="text-sm text-muted">{selected.size}장 선택됨</span>
+          <button
+            type="button"
+            className="btn-outline"
+            disabled={busy}
+            onClick={() =>
+              setSelected(allSelected ? new Set() : new Set(photos.map((p) => p.id)))
+            }
+          >
+            {allSelected ? "전체 해제" : "전체 선택"}
+          </button>
           <button
             type="button"
             className="btn-outline"
@@ -342,7 +377,10 @@ export function AlbumGrid({
             취소
           </button>
           {movePickerOpen && (
-            <div className="card absolute bottom-full left-0 mb-2 flex flex-col gap-1">
+            <div
+              data-selection-ui
+              className="card absolute bottom-full left-0 mb-2 flex flex-col gap-1"
+            >
               {albums.length === 0 && (
                 <span className="text-sm text-muted">이동할 앨범이 없어요.</span>
               )}
