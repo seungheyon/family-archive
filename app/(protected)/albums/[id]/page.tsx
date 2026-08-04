@@ -33,23 +33,14 @@ export default async function AlbumDetailPage({
   const supabase = createServerSupabaseClient(env);
   const admin = await isAdmin(env.SESSION_SECRET);
 
-  const { data: album } = await supabase
-    .from("albums")
-    .select("id, title")
-    .eq("id", id)
-    .single();
-
-  if (!album) {
-    notFound();
-  }
-
-  const [{ data: photos }, { data: otherAlbums }] = await Promise.all([
+  // 앨범과 그 사진들을 한 번에 가져온다 — 예전에는 앨범을 먼저 조회하고(notFound 판정)
+  // 그다음 사진을 조회해서 왕복이 두 번이었다.
+  const [{ data: album }, { data: otherAlbums }] = await Promise.all([
     supabase
-      .from("photos")
-      .select("id, taken_at, width, height, thumb_key")
-      .eq("album_id", id)
-      .order("taken_at", { ascending: true })
-      .returns<PhotoRow[]>(),
+      .from("albums")
+      .select("id, title, photos(id, taken_at, width, height, thumb_key)")
+      .eq("id", id)
+      .single<{ id: string; title: string; photos: PhotoRow[] }>(),
     supabase
       .from("albums")
       .select("id, title")
@@ -58,10 +49,18 @@ export default async function AlbumDetailPage({
       .returns<AlbumOptionRow[]>(),
   ]);
 
+  if (!album) {
+    notFound();
+  }
+
+  const photos = [...(album.photos ?? [])].sort((a, b) =>
+    (a.taken_at ?? "").localeCompare(b.taken_at ?? ""),
+  );
+
   // 사진 크기는 업로드 시 DB에 저장해두므로 여기서 R2를 다시 읽지 않는다 —
   // 예전에는 사진마다 R2에서 256KB씩 읽어 헤더를 파싱했고, 그게 앨범 페이지 응답이
   // 1.4~3.9초씩 걸리던 주된 원인이었다.
-  const photosWithDimensions = (photos ?? []).map((photo) => ({
+  const photosWithDimensions = photos.map((photo) => ({
     id: photo.id,
     width: photo.width ?? undefined,
     height: photo.height ?? undefined,

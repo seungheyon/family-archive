@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { isAdmin, isAuthenticated } from "@/lib/auth";
+import { DUPLICATE_TITLE_MESSAGE, findDuplicateAlbumTitle } from "@/lib/albumTitle";
 
 /**
  * 여러 장을 한 번에 삭제/이동한다.
@@ -17,7 +18,12 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { action?: string; ids?: string[]; albumId?: string | null };
+  let body: {
+    action?: string;
+    ids?: string[];
+    albumId?: string | null;
+    title?: string;
+  };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -30,6 +36,40 @@ export async function POST(request: Request) {
   }
 
   const supabase = createServerSupabaseClient(env);
+
+  // 미분류 사진을 고른 자리에서 바로 앨범을 만들어 묶는다 — 앨범을 먼저 만들고 목록으로
+  // 돌아와 다시 고르는 왕복을 없애기 위함.
+  if (body.action === "move-to-new-album") {
+    const title = typeof body.title === "string" ? body.title.trim() : "";
+    if (!title) {
+      return Response.json({ error: "앨범 이름을 입력해 주세요." }, { status: 400 });
+    }
+    if (await findDuplicateAlbumTitle(supabase, title)) {
+      return Response.json({ error: DUPLICATE_TITLE_MESSAGE }, { status: 409 });
+    }
+
+    const { data: album, error: createError } = await supabase
+      .from("albums")
+      .insert({ title })
+      .select("id")
+      .single();
+
+    if (createError || !album) {
+      return Response.json(
+        { error: createError?.message ?? "앨범을 만들지 못했어요." },
+        { status: 500 },
+      );
+    }
+
+    const { error } = await supabase
+      .from("photos")
+      .update({ album_id: album.id })
+      .in("id", ids);
+    if (error) {
+      return Response.json({ error: error.message }, { status: 500 });
+    }
+    return Response.json({ ok: true, albumId: album.id, moved: ids.length });
+  }
 
   if (body.action === "move") {
     const albumId = typeof body.albumId === "string" && body.albumId ? body.albumId : null;

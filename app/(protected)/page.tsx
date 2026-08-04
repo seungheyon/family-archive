@@ -8,6 +8,11 @@ import { CreateAlbumButton } from "@/components/CreateAlbumButton";
 import { QuickUploadButton } from "@/components/QuickUploadButton";
 import { BackfillThumbsButton } from "@/components/BackfillThumbsButton";
 import { isAdmin } from "@/lib/auth";
+import {
+  buildAlbumDateRanges,
+  formatDateRange,
+  type PhotoDateRow,
+} from "@/lib/albumDates";
 
 export const metadata: Metadata = {
   title: "앨범 목록",
@@ -16,20 +21,7 @@ export const metadata: Metadata = {
 interface AlbumRow {
   id: string;
   title: string;
-  date_start: string | null;
-  date_end: string | null;
   photos: { count: number }[];
-}
-
-function formatDate(iso: string) {
-  const [y, m, d] = iso.split("-");
-  return `${y}.${m}.${d}`;
-}
-
-function formatDateRange(start: string, end: string) {
-  return start === end
-    ? formatDate(start)
-    : `${formatDate(start)} ~ ${formatDate(end)}`;
 }
 
 // 실제 책장처럼 책마다 표지색이 다르게 보이도록 순환시키는 팔레트. 앱 테마(살구/하늘/분홍/연두)와는
@@ -53,20 +45,37 @@ export default async function AlbumListPage({
   const supabase = createServerSupabaseClient(env);
   const admin = await isAdmin(env.SESSION_SECRET);
 
-  const [{ data: albums }, { count: unassignedCount }] = await Promise.all([
-    supabase
-      .from("albums")
-      .select("id, title, date_start, date_end, photos(count)")
-      .order("date_start", { ascending: false })
-      .returns<AlbumRow[]>(),
-    supabase
-      .from("photos")
-      .select("id", { count: "exact", head: true })
-      .is("album_id", null),
-  ]);
+  const [{ data: albums }, { count: unassignedCount }, { data: photoDates }] =
+    await Promise.all([
+      supabase
+        .from("albums")
+        .select("id, title, photos(count)")
+        .returns<AlbumRow[]>(),
+      supabase
+        .from("photos")
+        .select("id", { count: "exact", head: true })
+        .is("album_id", null),
+      // 앨범 날짜는 저장된 date_start 대신 사진에서 계산한다(lib/albumDates 참고)
+      supabase
+        .from("photos")
+        .select("album_id, taken_at, uploaded_at")
+        .not("album_id", "is", null)
+        .returns<PhotoDateRow[]>(),
+    ]);
 
-  const visibleAlbums =
-    albums?.filter((album) => (album.photos?.[0]?.count ?? 0) > 0) ?? [];
+  const dateRanges = buildAlbumDateRanges(photoDates ?? []);
+
+  // 빈 앨범도 목록에 노출한다 — 예전엔 사진 0장인 앨범을 숨겼는데, 그러면 들어갈 수가 없어서
+  // 사진을 넣지도 지우지도 못하는 상태가 됐다.
+  // 정렬은 앨범의 가장 최근 날짜 기준 내림차순, 날짜를 알 수 없는 앨범은 맨 뒤로 보낸다.
+  const sortedAlbums = [...(albums ?? [])].sort((a, b) => {
+    const ra = dateRanges.get(a.id);
+    const rb = dateRanges.get(b.id);
+    if (ra && rb) return rb.end.localeCompare(ra.end);
+    if (ra) return -1;
+    if (rb) return 1;
+    return a.title.localeCompare(b.title);
+  });
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-20">
@@ -76,38 +85,44 @@ export default async function AlbumListPage({
 
       <FeedbackBanner msg={msg} count={count} />
 
-      {visibleAlbums.length === 0 && (
+      {sortedAlbums.length === 0 && (
         <p className="text-sm text-muted">
-          아직 정리된 앨범이 없어요. 아래에서 앨범을 만들고 들어가서 사진을
-          업로드해 보세요.
+          아직 앨범이 없어요. 아래에서 앨범을 만들고 들어가서 사진을 업로드해
+          보세요.
         </p>
       )}
 
-      {visibleAlbums.length > 0 && (
+      {sortedAlbums.length > 0 && (
         <div className="bookshelf">
           <div className="bookshelf-grid">
-            {visibleAlbums.map((album, i) => (
-              <Link
-                key={album.id}
-                href={`/albums/${album.id}`}
-                className="book-spine"
-                style={{ "--book-color": BOOK_COLORS[i % BOOK_COLORS.length] } as React.CSSProperties}
-              >
-                <span className="book-label">
-                  <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
-                    {album.title}
+            {sortedAlbums.map((album, i) => {
+              const range = dateRanges.get(album.id);
+              const photoCount = album.photos?.[0]?.count ?? 0;
+              return (
+                <Link
+                  key={album.id}
+                  href={`/albums/${album.id}`}
+                  className="book-spine"
+                  style={
+                    {
+                      "--book-color": BOOK_COLORS[i % BOOK_COLORS.length],
+                    } as React.CSSProperties
+                  }
+                >
+                  <span className="book-label">
+                    <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
+                      {album.title}
+                    </span>
                   </span>
-                </span>
-                {album.date_start && album.date_end && (
                   <span className="text-[10px] text-white/75">
-                    {formatDateRange(album.date_start, album.date_end)}
+                    {range ? formatDateRange(range) : "날짜 없음"}
                   </span>
-                )}
-                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
-                  사진 {album.photos?.[0]?.count ?? 0}장
-                </span>
-              </Link>
-            ))}
+                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
+                    사진 {photoCount}장
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

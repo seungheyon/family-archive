@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
+import { findDuplicateAlbumTitle } from "@/lib/albumTitle";
 
 export async function POST(
   request: Request,
@@ -18,6 +19,14 @@ export async function POST(
 
   if (typeof title === "string" && title.trim()) {
     const supabase = createServerSupabaseClient(env);
+
+    if (await findDuplicateAlbumTitle(supabase, title, id)) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `/albums/${id}?msg=album-duplicate` },
+      });
+    }
+
     await supabase.from("albums").update({ title: title.trim() }).eq("id", id);
   }
 

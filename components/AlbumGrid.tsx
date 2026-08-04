@@ -210,6 +210,33 @@ export function AlbumGrid({
     }
   }
 
+  async function moveToNewAlbum(ids: string[]) {
+    const title = prompt("새 앨범 이름을 입력해 주세요.");
+    if (title === null) return;
+    if (!title.trim()) {
+      alert("앨범 이름을 입력해 주세요.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const res = await fetch("/api/photos/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "move-to-new-album", ids, title }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        alert(data.error ?? "앨범을 만들지 못했어요.");
+        return;
+      }
+      exitSelectionMode();
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function deletePhotos(ids: string[]) {
     setBusy(true);
     try {
@@ -358,6 +385,14 @@ export function AlbumGrid({
             onClick={() => setMovePickerOpen((v) => !v)}
           >
             이동
+          </button>
+          <button
+            type="button"
+            className="btn-outline"
+            disabled={selected.size === 0 || busy}
+            onClick={() => moveToNewAlbum([...selected])}
+          >
+            새 앨범으로
           </button>
           {admin && (
             <button

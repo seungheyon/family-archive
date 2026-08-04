@@ -14,6 +14,7 @@ const MESSAGES: Record<string, (count?: string) => string> = {
   "album-created": () => "새 앨범을 만들었어요.",
   "album-deleted": () => "앨범을 삭제했어요. 사진은 미분류로 남아있어요.",
   "album-merged": () => "앨범을 합쳤어요.",
+  "album-duplicate": () => "같은 이름의 앨범이 이미 있어요.",
 };
 
 /**

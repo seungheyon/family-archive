@@ -19,6 +19,36 @@ export function UploadForm({ albumId }: { albumId?: string }) {
   const [toastKey, setToastKey] = useState(0);
   const [failures, setFailures] = useState<UploadResult[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [doneCount, setDoneCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
+  /** 사진 한 장을 썸네일과 함께 올린다 */
+  async function uploadOne(file: File): Promise<UploadResult> {
+    const formData = new FormData();
+    if (albumId) formData.set("album_id", albumId);
+    formData.append("photos", file);
+
+    // 원본은 그대로 올리되, 썸네일과 실제 표시 크기를 함께 보내 서버가 R2를 다시 읽지
+    // 않아도 되게 한다. 썸네일 생성이 실패하면 원본만 올라간다.
+    const thumb = await createThumbnail(file);
+    if (thumb) {
+      formData.append("thumb_0", thumb.blob, "thumb_0.jpg");
+      formData.set(
+        "dimensions",
+        JSON.stringify([{ index: 0, width: thumb.width, height: thumb.height }]),
+      );
+    }
+
+    const res = await fetch("/api/photos", { method: "POST", body: formData });
+    const data = (await res.json()) as { results?: UploadResult[] };
+    return (
+      data.results?.[0] ?? {
+        filename: file.name,
+        ok: false,
+        error: "알 수 없는 오류",
+      }
+    );
+  }
 
   async function handleFiles(fileList: FileList | null) {
     const files = Array.from(fileList ?? []);
@@ -27,28 +57,39 @@ export function UploadForm({ albumId }: { albumId?: string }) {
     setSubmitting(true);
     setStatus("");
     setOkCount(0);
+    setDoneCount(0);
+    setTotalCount(files.length);
     setFailures([]);
 
     try {
-      const formData = new FormData();
-      if (albumId) formData.set("album_id", albumId);
+      // 진행 상황을 장 단위로 보여주려고 파일마다 따로 요청한다. 다만 한 장씩 순서대로
+      // 기다리면 느려지므로, 동시에 3장까지만 올리는 방식으로 속도와 진행률을 함께 잡는다.
+      const CONCURRENCY = 3;
+      const results: UploadResult[] = [];
+      let cursor = 0;
+      let completed = 0;
 
-      // 원본은 그대로 올리되, 썸네일과 실제 표시 크기를 함께 보내 서버가 R2를 다시 읽지
-      // 않아도 되게 한다. 썸네일 생성이 실패한 파일은 인덱스만 빠지고 원본은 정상 업로드된다.
-      const dimensions: { index: number; width: number; height: number }[] = [];
-      for (const [index, file] of files.entries()) {
-        formData.append("photos", file);
-        const thumb = await createThumbnail(file);
-        if (thumb) {
-          formData.append(`thumb_${index}`, thumb.blob, `thumb_${index}.jpg`);
-          dimensions.push({ index, width: thumb.width, height: thumb.height });
+      async function worker() {
+        while (cursor < files.length) {
+          const index = cursor++;
+          try {
+            results.push(await uploadOne(files[index]));
+          } catch {
+            results.push({
+              filename: files[index].name,
+              ok: false,
+              error: "업로드 중 오류가 발생했어요.",
+            });
+          }
+          completed++;
+          setDoneCount(completed);
         }
       }
-      formData.set("dimensions", JSON.stringify(dimensions));
 
-      const res = await fetch("/api/photos", { method: "POST", body: formData });
-      const data = (await res.json()) as { results?: UploadResult[] };
-      const results = data.results ?? [];
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, files.length) }, worker),
+      );
+
       const succeeded = results.filter((r) => r.ok).length;
       const failed = results.filter((r) => !r.ok);
       setOkCount(succeeded);
@@ -64,6 +105,7 @@ export function UploadForm({ albumId }: { albumId?: string }) {
       setStatus("업로드 중 오류가 발생했어요.");
     } finally {
       setSubmitting(false);
+      setTotalCount(0);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
@@ -85,7 +127,11 @@ export function UploadForm({ albumId }: { albumId?: string }) {
         onClick={() => fileInputRef.current?.click()}
         className="btn-primary"
       >
-        {submitting ? "업로드 중..." : "사진 업로드"}
+        {submitting
+          ? totalCount > 0
+            ? `업로드 중... (${doneCount}/${totalCount}장)`
+            : "업로드 중..."
+          : "사진 업로드"}
       </button>
       {okCount > 0 && (
         <Toast
