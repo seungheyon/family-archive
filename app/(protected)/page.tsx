@@ -7,6 +7,7 @@ import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { CreateAlbumButton } from "@/components/CreateAlbumButton";
 import { QuickUploadButton } from "@/components/QuickUploadButton";
 import { BackfillThumbsButton } from "@/components/BackfillThumbsButton";
+import { NotificationToggle } from "@/components/NotificationToggle";
 import { isAdmin } from "@/lib/auth";
 import {
   buildAlbumDateRanges,
@@ -136,6 +137,7 @@ export default async function AlbumListPage({
             앨범에 포함되지 않은 사진이 있어요!
           </Link>
         )}
+        <NotificationToggle vapidPublicKey={env.VAPID_PUBLIC_KEY} />
         {admin && <BackfillThumbsButton />}
       </div>
     </div>

@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": "cron/index.js",
+  "name": "family-archive-cron",
+  "compatibility_date": "2024-12-30",
+  // 같은 계정의 다른 Worker(본체)를 일반 인터넷 주소처럼 호출하기 위해 필요.
+  // 없으면 Worker끼리의 요청이 루프 방지에 걸려 error 1042가 난다.
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "triggers": {
+    // UTC 자정 = 한국시간 오전 9시
+    "crons": ["0 0 * * *"]
+  },
+  "vars": {
+    "APP_ORIGIN": "https://family-archive.gusrhgid.workers.dev"
+  }
+}
