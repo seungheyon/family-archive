@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { photoItem, photoStagger } from "@/lib/motion";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import "photoswipe/style.css";
 import { DOTS_ICON_HTML } from "@/components/DotsIcon";
@@ -298,13 +300,19 @@ export function AlbumGrid({
 
   return (
     <div className="album-frame">
-      <div
+      {/* 펼쳐진 뒤 내지 사진들이 순차적으로 나타난다(스킬 명세: 50~100ms 간격) */}
+      <motion.div
         ref={containerRef}
         className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
+        variants={photoStagger}
+        initial="hidden"
+        animate="visible"
       >
         {photos.map((photo) => (
-          <a
+          <motion.a
             key={photo.id}
+            variants={photoItem}
+            whileHover={{ y: -4, scale: 1.03 }}
             href={`/api/photos/${photo.id}/file`}
             data-photo-id={photo.id}
             data-pswp-width={photo.width ?? FALLBACK_DIMENSION}
@@ -346,9 +354,9 @@ export function AlbumGrid({
                 {selected.has(photo.id) ? "✓" : ""}
               </span>
             )}
-          </a>
+          </motion.a>
         ))}
-      </div>
+      </motion.div>
 
       {photos.length === 0 && (
         <p className="mt-4 text-sm text-muted">{emptyMessage}</p>

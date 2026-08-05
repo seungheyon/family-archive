@@ -259,11 +259,29 @@ body {
      line-clamp로만 줄인다(nowrap 금지). 책등(제본)은 왼쪽 한쪽에만 표현해 "칩"처럼
      보이지 않고 표지+책등이 명확히 구분되게 한다. 책배(페이지 단면)도 위쪽 한 곳에만
      둬서 하나의 일관된 시점(살짝 위에서 내려다보는 각도)으로 보이게 한다. */
-  .book-spine {
-    position: relative;
+  /* 책 한 권이 3D로 열릴 무대. perspective를 부모에 둬야 자식의 rotateY가 원근감 있게
+     보인다(스킬 명세: perspective 1000px 이상). */
+  .book-stage {
+    perspective: 1200px;
+    perspective-origin: 50% 40%;
+    flex-shrink: 0;
     width: 112px;
     height: var(--shelf-book-h);
-    flex-shrink: 0;
+  }
+
+  .book-spine {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    /* 애니메이션은 transform/opacity로만 — 레이아웃 속성은 건드리지 않는다 */
+    will-change: transform;
+  }
+
+  /* 표지: 책등(왼쪽 모서리)을 축으로 열린다 */
+  .book-cover {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -283,19 +301,14 @@ body {
       rgba(0, 0, 0, 0.12) 100%
     );
     box-shadow: 4px 6px 10px rgba(0, 0, 0, 0.4);
-    transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
-  .book-spine:hover,
-  .book-spine:active {
-    transform: translateY(-6px);
-    box-shadow: 6px 12px 16px rgba(0, 0, 0, 0.45);
-  }
-
-  /* 책배(위쪽 페이지 단면)만 표현 — 아래쪽엔 두지 않아 시점이 한쪽으로 일관되게 유지 */
-  .book-spine::before {
+  /* 책배(위쪽 페이지 단면) — 표지에 붙어 함께 회전한다 */
+  .book-cover::before {
     content: "";
     position: absolute;
     top: 0;
@@ -309,6 +322,43 @@ body {
       rgba(255, 255, 255, 0.92) 1px,
       rgba(205, 195, 178, 0.92) 1px,
       rgba(205, 195, 178, 0.92) 2px
+    );
+  }
+
+  /* 열림 각도에 따라 표지에 스치는 빛 — 각도가 커질수록 어두워져 두께감을 만든다 */
+  .book-cover-sheen {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.28),
+      rgba(255, 255, 255, 0.04) 35%,
+      rgba(0, 0, 0, 0.22) 100%
+    );
+  }
+
+  /* 표지가 열리면 드러나는 속지(종이면) */
+  .book-inner {
+    position: absolute;
+    inset: 0;
+    border-radius: 2px 6px 6px 2px;
+    background: linear-gradient(to right, #e8dcc6 0%, #fbf6ec 12%, #fbf6ec 100%);
+    box-shadow: inset 6px 0 10px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    z-index: -1;
+  }
+
+  .book-inner-lines {
+    position: absolute;
+    inset: 18px 12px 18px 22px;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.07) 0px,
+      rgba(0, 0, 0, 0.07) 1px,
+      transparent 1px,
+      transparent 9px
     );
   }
 
@@ -423,4 +473,42 @@ body {
   background: rgba(251, 246, 236, 0.94);
   --pswp-icon-color: #2b2b2b;
   --pswp-icon-color-secondary: #ffffff;
+}
+
+/* 사진을 확대하면 뒤 배경을 흐리게 — 사진 한 장에 시선이 모이게 한다(스킬 명세).
+   backdrop-filter는 합성 단계에서 처리돼 레이아웃 리플로우를 만들지 않는다. */
+.pswp .pswp__bg {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* 앨범을 닫을 때 화면 위를 덮는 표지 — 왼쪽(책등)을 축으로 덮인다 */
+.book-closing-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  will-change: transform;
+  pointer-events: none;
+  background-color: #5c3c26;
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.16),
+    rgba(0, 0, 0, 0.35) 70%
+  );
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+}
+
+/* 모션이 부담스럽거나 어지러운 사용자를 위한 안전장치 — OS 설정을 존중한다.
+   이 프로젝트는 부모님 세대가 주 사용자라 특히 중요하다. */
+@media (prefers-reduced-motion: reduce) {
+  .book-cover,
+  .book-spine {
+    transition: none !important;
+  }
+  .pswp .pswp__bg {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }

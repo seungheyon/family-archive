@@ -6,6 +6,7 @@ import { isAdmin } from "@/lib/auth";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { AlbumGrid } from "@/components/AlbumGrid";
 import { DeleteButton } from "@/components/DeleteButton";
+import { PageEnter } from "@/components/PageEnter";
 
 export const metadata: Metadata = {
   title: "미분류 사진",
@@ -57,7 +58,8 @@ export default async function UnassignedPhotosPage({
   }));
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-16">
+    <PageEnter>
+      <div className="mx-auto max-w-5xl px-6 py-16">
       <Link
         href="/"
         className="mb-4 inline-block text-sm text-muted hover:text-accent"
@@ -89,6 +91,7 @@ export default async function UnassignedPhotosPage({
         admin={admin}
         emptyMessage="미분류 사진이 없어요."
       />
-    </div>
+      </div>
+    </PageEnter>
   );
 }

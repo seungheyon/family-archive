@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PasswordHintInput } from "@/components/PasswordHintInput";
+import { PageEnter } from "@/components/PageEnter";
 
 export const metadata: Metadata = {
   title: "로그인",
@@ -13,7 +14,8 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4">
+    <PageEnter>
+      <div className="flex min-h-screen flex-col items-center justify-center px-4">
       <form
         action="/api/login"
         method="POST"
@@ -32,6 +34,7 @@ export default async function LoginPage({
           입장
         </button>
       </form>
-    </div>
+      </div>
+    </PageEnter>
   );
 }

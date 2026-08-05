@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
@@ -6,6 +5,7 @@ import { isAdmin } from "@/lib/auth";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { AlbumGrid } from "@/components/AlbumGrid";
 import { AlbumManageMenu } from "@/components/AlbumManageMenu";
+import { BookCloseLink } from "@/components/BookCloseLink";
 
 interface PhotoRow {
   id: string;
@@ -69,12 +69,7 @@ export default async function AlbumDetailPage({
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
-      <Link
-        href="/"
-        className="mb-4 inline-block text-sm text-muted hover:text-accent"
-      >
-        ← 앨범 목록
-      </Link>
+      <BookCloseLink>← 앨범 목록</BookCloseLink>
 
       <div className="mb-8 flex items-center justify-between gap-2">
         <h1 className="min-w-0 line-clamp-2 text-2xl font-semibold text-foreground">

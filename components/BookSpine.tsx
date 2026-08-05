@@ -1,0 +1,118 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, useMotionValue, useSpring } from "framer-motion";
+import { DURATION, SPRING, SPRING_SLOW, tiltFromPointer } from "@/lib/motion";
+
+/**
+ * 책장에 꽂힌 책 한 권(앨범 하나).
+ *
+ * 상태: closed → opening → (라우팅) 으로 진행한다. 표지가 책등을 축으로 열리는 동안
+ * 카드가 화면 중앙으로 확대되고, 애니메이션이 끝나면 앨범 상세로 이동한다.
+ * 이렇게 해야 "책을 펼쳐서 그 안을 본다"는 은유가 화면 전환과 이어진다.
+ */
+export function BookSpine({
+  albumId,
+  title,
+  dateLabel,
+  photoCount,
+  coverColor,
+}: {
+  albumId: string;
+  title: string;
+  dateLabel: string;
+  photoCount: number;
+  coverColor: string;
+}) {
+  const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<"closed" | "opening">("closed");
+
+  // 커서 근접 시의 미세 틸트 — 스프링을 통과시켜 손맛이 나게 한다
+  const rotateX = useSpring(useMotionValue(0), SPRING);
+  const rotateY = useSpring(useMotionValue(0), SPRING);
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse" || phase !== "closed") return;
+    const tilt = tiltFromPointer(event, 5);
+    rotateX.set(tilt.rotateX);
+    rotateY.set(tilt.rotateY);
+  }
+
+  function resetTilt() {
+    rotateX.set(0);
+    rotateY.set(0);
+  }
+
+  function open() {
+    if (phase !== "closed") return;
+    resetTilt();
+    setPhase("opening");
+    // 표지가 다 열린 뒤 이동 — 여기서 이동해버리면 열림이 끊겨 보인다
+    window.setTimeout(() => router.push(`/albums/${albumId}`), DURATION.slow * 1000);
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="book-stage"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetTilt}
+    >
+      <motion.div
+        className="book-spine"
+        style={{
+          // @ts-expect-error CSS 변수 전달
+          "--book-color": coverColor,
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+        }}
+        // 호버: 표지가 살짝 들리며 3~5도 열리는 프리뷰(마우스 환경에서만 의미 있음)
+        whileHover={phase === "closed" ? { y: -8, scale: 1.03 } : undefined}
+        animate={
+          phase === "opening"
+            ? { scale: 1.35, y: -24, zIndex: 60 }
+            : { scale: 1, y: 0, zIndex: 1 }
+        }
+        transition={phase === "opening" ? SPRING_SLOW : SPRING}
+        onClick={open}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open();
+          }
+        }}
+      >
+        {/* 표지 — 책등을 회전축(left)으로 열린다 */}
+        <motion.div
+          className="book-cover"
+          initial={false}
+          animate={{ rotateY: phase === "opening" ? -155 : 0 }}
+          whileHover={phase === "closed" ? { rotateY: -5 } : undefined}
+          transition={phase === "opening" ? SPRING_SLOW : SPRING}
+        >
+          <span className="book-label">
+            <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
+              {title}
+            </span>
+          </span>
+          <span className="text-[10px] text-white/75">{dateLabel}</span>
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
+            사진 {photoCount}장
+          </span>
+          {/* 열림 각도에 따라 밝기가 변하는 오버레이 — 입체감의 핵심 */}
+          <div className="book-cover-sheen" aria-hidden="true" />
+        </motion.div>
+
+        {/* 표지가 열리면 드러나는 속지 */}
+        <div className="book-inner" aria-hidden="true">
+          <div className="book-inner-lines" />
+        </div>
+      </motion.div>
+    </div>
+  );
+}

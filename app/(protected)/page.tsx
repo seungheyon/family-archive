@@ -7,6 +7,7 @@ import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { CreateAlbumButton } from "@/components/CreateAlbumButton";
 import { QuickUploadButton } from "@/components/QuickUploadButton";
 import { BackfillThumbsButton } from "@/components/BackfillThumbsButton";
+import { BookSpine } from "@/components/BookSpine";
 import { NotificationToggle } from "@/components/NotificationToggle";
 import { isAdmin } from "@/lib/auth";
 import {
@@ -98,30 +99,15 @@ export default async function AlbumListPage({
           <div className="bookshelf-grid">
             {sortedAlbums.map((album, i) => {
               const range = dateRanges.get(album.id);
-              const photoCount = album.photos?.[0]?.count ?? 0;
               return (
-                <Link
+                <BookSpine
                   key={album.id}
-                  href={`/albums/${album.id}`}
-                  className="book-spine"
-                  style={
-                    {
-                      "--book-color": BOOK_COLORS[i % BOOK_COLORS.length],
-                    } as React.CSSProperties
-                  }
-                >
-                  <span className="book-label">
-                    <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
-                      {album.title}
-                    </span>
-                  </span>
-                  <span className="text-[10px] text-white/75">
-                    {range ? formatDateRange(range) : "날짜 없음"}
-                  </span>
-                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
-                    사진 {photoCount}장
-                  </span>
-                </Link>
+                  albumId={album.id}
+                  title={album.title}
+                  dateLabel={range ? formatDateRange(range) : "날짜 없음"}
+                  photoCount={album.photos?.[0]?.count ?? 0}
+                  coverColor={BOOK_COLORS[i % BOOK_COLORS.length]}
+                />
               );
             })}
           </div>

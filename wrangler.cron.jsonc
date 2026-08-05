@@ -7,8 +7,9 @@
   // 없으면 Worker끼리의 요청이 루프 방지에 걸려 error 1042가 난다.
   "compatibility_flags": ["global_fetch_strictly_public"],
   "triggers": {
-    // UTC 자정 = 한국시간 오전 9시
-    "crons": ["0 0 * * *"]
+    // "0 0 * * *"  → UTC 자정 = 한국시간 오전 9시, 기념일 알림
+    // "*/5 * * * *" → 5분마다, 예약된 알림(지정 시각 1회 발송) 확인
+    "crons": ["0 0 * * *", "*/5 * * * *"]
   },
   "vars": {
     "APP_ORIGIN": "https://family-archive.gusrhgid.workers.dev"
