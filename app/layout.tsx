@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
-import { THEME_STORAGE_KEY } from "@/lib/theme";
+import { getSeason } from "@/lib/season";
+import { SeasonParticles } from "@/components/SeasonParticles";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,20 +27,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const season = getSeason();
+
   return (
     <html
       lang="ko"
+      data-season={season}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`try {
-            var t = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
-            if (t) document.documentElement.setAttribute('data-theme', t);
-          } catch (e) {}`}
-        </Script>
-      </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* 계절 입자는 배경 레이어라 본문보다 먼저 그린다 */}
+        <SeasonParticles season={season} />
+        <div className="app-shell min-h-full flex flex-col">{children}</div>
+      </body>
     </html>
   );
 }

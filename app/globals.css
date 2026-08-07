@@ -10,34 +10,53 @@
   --border: #dde3e7;
   --accent-foreground: #ffffff;
 
-  /* 기본 테마: 살구 */
-  --bg-gradient-from: #fde1d3;
-  --accent: #e8935f;
+  /* 액센트·배경은 계절이 결정한다(아래 :root[data-season=...]) — 기본값은 여름 */
+  --accent: #2f8f83;
 }
 
-:root[data-theme="apricot"] {
-  --bg-gradient-from: #fde1d3;
-  --accent: #e8935f;
-  --accent-foreground: #ffffff;
+/*
+  계절 테마 — 색상 테마(4색 수동 선택)를 대체한다. 날짜로만 결정되며(lib/season.ts),
+  <html data-season="...">에 서버가 직접 심어 내려보내므로 깜빡임이 없다.
+
+  각 계절은 하늘 그라데이션 3구간 + 지평선 빛 + 대기 색을 갖는다. 배경은 body에
+  고정(background-attachment: fixed)돼 스크롤해도 하늘이 따라오지 않는다.
+*/
+:root[data-season="spring"] {
+  --sky-top: #cfe4f7;
+  --sky-mid: #f3e2ee;
+  --sky-low: #fdf1e3;
+  --sun-glow: rgba(255, 214, 226, 0.55);
+  --haze: rgba(255, 236, 244, 0.5);
+  --accent: #d9628c;
 }
 
-:root[data-theme="sky"] {
-  --bg-gradient-from: #cfeafb;
-  --accent: #3b82f6;
-  --accent-foreground: #ffffff;
+:root[data-season="summer"] {
+  --sky-top: #4aa3dd;
+  --sky-mid: #9fd6ee;
+  --sky-low: #e8f6f2;
+  --sun-glow: rgba(255, 246, 190, 0.6);
+  --haze: rgba(214, 244, 236, 0.45);
+  --accent: #1f7f74;
 }
 
-:root[data-theme="pink"] {
-  --bg-gradient-from: #fbd8e8;
-  --accent: #ec6fa0;
-  --accent-foreground: #ffffff;
+:root[data-season="autumn"] {
+  --sky-top: #a9c4d8;
+  --sky-mid: #f0d2a8;
+  --sky-low: #f8e6cd;
+  --sun-glow: rgba(255, 198, 130, 0.55);
+  --haze: rgba(246, 222, 190, 0.5);
+  --accent: #b25a24;
 }
 
-:root[data-theme="lime"] {
-  --bg-gradient-from: #dff2c8;
-  --accent: #5a9c2f;
-  --accent-foreground: #ffffff;
+:root[data-season="winter"] {
+  --sky-top: #8fa8c4;
+  --sky-mid: #cfdcea;
+  --sky-low: #f2f6fa;
+  --sun-glow: rgba(226, 240, 255, 0.6);
+  --haze: rgba(232, 240, 250, 0.55);
+  --accent: #3f6ea8;
 }
+
 
 @theme inline {
   --color-background: var(--background);
@@ -61,32 +80,41 @@
     --border: #2b343b;
     --accent-foreground: #2e2019;
 
-    --bg-gradient-from: #2e2019;
-    --accent: #f0a873;
+    --accent: #63c3b6;
   }
 
-  :root[data-theme="apricot"] {
-    --bg-gradient-from: #2e2019;
-    --accent: #f0a873;
-    --accent-foreground: #2e2019;
+  /* 다크 모드에서는 하늘을 밤하늘로 낮춘다 — 계절감은 색조로만 남긴다 */
+  :root[data-season="spring"] {
+    --sky-top: #1c2233;
+    --sky-mid: #2b2438;
+    --sky-low: #33283a;
+    --sun-glow: rgba(255, 190, 214, 0.16);
+    --haze: rgba(60, 44, 62, 0.5);
+    --accent: #e58bab;
   }
-
-  :root[data-theme="sky"] {
-    --bg-gradient-from: #16222e;
-    --accent: #5b9bd9;
-    --accent-foreground: #0b1117;
+  :root[data-season="summer"] {
+    --sky-top: #0f2233;
+    --sky-mid: #14384a;
+    --sky-low: #1b4a4a;
+    --sun-glow: rgba(190, 240, 255, 0.16);
+    --haze: rgba(30, 70, 76, 0.5);
+    --accent: #63c3b6;
   }
-
-  :root[data-theme="pink"] {
-    --bg-gradient-from: #2e1c26;
-    --accent: #f08fbb;
-    --accent-foreground: #2e1c26;
+  :root[data-season="autumn"] {
+    --sky-top: #1e1a24;
+    --sky-mid: #33241f;
+    --sky-low: #3d2a1d;
+    --sun-glow: rgba(255, 190, 130, 0.16);
+    --haze: rgba(70, 48, 32, 0.5);
+    --accent: #e0864a;
   }
-
-  :root[data-theme="lime"] {
-    --bg-gradient-from: #1e2a18;
-    --accent: #8fc65a;
-    --accent-foreground: #17240f;
+  :root[data-season="winter"] {
+    --sky-top: #131a26;
+    --sky-mid: #1f2a3a;
+    --sky-low: #29364a;
+    --sun-glow: rgba(200, 224, 255, 0.18);
+    --haze: rgba(40, 54, 74, 0.5);
+    --accent: #7aa6dd;
   }
 }
 
@@ -100,13 +128,25 @@ body {
 }
 
 body {
-  background: linear-gradient(
-    to bottom,
-    var(--bg-gradient-from) 0%,
-    var(--bg-gradient-from) 75%,
-    var(--bg-gradient-to) 100%
-  );
+  /* 계절 하늘 — 지평선 근처의 빛(radial)과 대기의 흐림(linear)을 겹쳐 깊이를 만든다.
+     전부 그라데이션이라 추가 네트워크 요청이 없고, 고정 배경이라 스크롤해도 따라오지 않는다. */
+  background-color: var(--sky-mid);
+  background-image:
+    radial-gradient(
+      120% 62% at 50% 96%,
+      var(--sun-glow) 0%,
+      transparent 62%
+    ),
+    linear-gradient(to bottom, transparent 55%, var(--haze) 100%),
+    linear-gradient(
+      to bottom,
+      var(--sky-top) 0%,
+      var(--sky-mid) 52%,
+      var(--sky-low) 100%
+    );
   background-attachment: fixed;
+  background-repeat: no-repeat;
+  min-height: 100vh;
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
@@ -176,55 +216,91 @@ body {
     @apply h-10 w-full min-w-0 max-w-56 shrink rounded-lg border border-border bg-surface px-3 text-foreground;
   }
 
-  /* 책장: 부모님 세대도 한눈에 "책장"으로 알아볼 수 있도록 스큐어모피즘으로 구현.
-     나무 톤은 테마(살구/하늘/분홍/연두)와 무관하게 항상 동일 — 책장 자체는 가구이지
-     앱 UI 크롬이 아니므로 테마 전환 대상에서 제외. 좌우 세로 기둥+상단 크라운으로
-     "가구 프레임" 디테일을 주고, 안쪽은 깊게 파인 느낌을 내도록 인셋 그림자를 강하게. */
+  /* ── 책장 ─────────────────────────────────────────────────────────────
+     원목 책장을 CSS만으로 쌓아 만든다. 층위가 많아 보이지만 전부 그라데이션이라
+     추가 요청이 없고, 페인트 비용도 정적(애니메이션 없음)이라 조회 지연과 무관하다.
+
+     구조: 뒤판(어두운 안쪽) → 나무결 → 선반 상판/전면 엣지 → 좌우 기둥 → 상단 갓
+     나무 톤은 계절과 무관하게 고정한다(가구는 계절 따라 색이 바뀌지 않으므로). */
   .bookshelf {
-    --shelf-book-h: 176px;
-    --shelf-row-gap: 36px;
-    --shelf-edge-h: 8px;
-    --shelf-post-w: 16px;
+    --shelf-book-h: 188px;
+    --shelf-row-gap: 46px;
+    --shelf-edge-h: 12px;
+    --shelf-post-w: 20px;
+    --wood-dark: #3a2415;
+    --wood-mid: #6b4526;
+    --wood-light: #9a6b3d;
+
     position: relative;
-    border-radius: 10px;
-    padding: 20px calc(var(--shelf-post-w) + 14px) 16px;
-    background-color: #5c3c26;
+    border-radius: 8px 8px 6px 6px;
+    padding: 30px calc(var(--shelf-post-w) + 16px) 22px;
+    isolation: isolate;
+    background-color: var(--wood-mid);
     background-image:
-      /* 선반 전면 엣지: 책 높이 바로 아래에 하이라이트+그림자로 반복 배치 */
+      /* 1) 선반 한 칸의 구조: 책 아래로 상판 하이라이트 → 전면 엣지 → 그 아래 그늘 */
       repeating-linear-gradient(
         to bottom,
         transparent 0,
         transparent var(--shelf-book-h),
-        rgba(255, 214, 170, 0.4) var(--shelf-book-h),
-        rgba(255, 214, 170, 0.4) calc(var(--shelf-book-h) + 3px),
-        rgba(0, 0, 0, 0.45) calc(var(--shelf-book-h) + 3px),
-        rgba(0, 0, 0, 0.45) calc(var(--shelf-book-h) + var(--shelf-edge-h)),
-        transparent calc(var(--shelf-book-h) + var(--shelf-edge-h)),
+        rgba(255, 226, 180, 0.55) var(--shelf-book-h),
+        rgba(255, 226, 180, 0.55) calc(var(--shelf-book-h) + 2px),
+        var(--wood-light) calc(var(--shelf-book-h) + 2px),
+        var(--wood-mid) calc(var(--shelf-book-h) + 7px),
+        var(--wood-dark) calc(var(--shelf-book-h) + var(--shelf-edge-h)),
+        rgba(0, 0, 0, 0.55) calc(var(--shelf-book-h) + var(--shelf-edge-h)),
+        rgba(0, 0, 0, 0.18) calc(var(--shelf-book-h) + var(--shelf-edge-h) + 14px),
+        transparent calc(var(--shelf-book-h) + var(--shelf-edge-h) + 26px),
         transparent calc(var(--shelf-book-h) + var(--shelf-row-gap))
       ),
-      /* 나무결 미세 텍스처(결이 두 방향으로 겹쳐 보이도록 진하게) */
+      /* 2) 나무결: 굵은 결과 잔결을 서로 다른 각도로 겹쳐 단조로움을 없앤다 */
       repeating-linear-gradient(
-        88deg,
-        rgba(0, 0, 0, 0.12) 0px,
-        rgba(0, 0, 0, 0.12) 1px,
+        91deg,
+        rgba(0, 0, 0, 0.16) 0px,
+        rgba(0, 0, 0, 0.16) 1px,
         transparent 1px,
-        transparent 3px,
-        rgba(255, 255, 255, 0.05) 3px,
-        rgba(255, 255, 255, 0.05) 4px,
-        transparent 4px,
-        transparent 7px
+        transparent 5px,
+        rgba(255, 220, 170, 0.07) 5px,
+        rgba(255, 220, 170, 0.07) 6px,
+        transparent 6px,
+        transparent 13px
       ),
-      linear-gradient(160deg, #7a5236 0%, #5c3c26 55%, #462e18 100%);
+      repeating-linear-gradient(
+        88.5deg,
+        rgba(0, 0, 0, 0.09) 0px,
+        rgba(0, 0, 0, 0.09) 2px,
+        transparent 2px,
+        transparent 23px
+      ),
+      /* 3) 옹이 자국 — 두 군데만 은근하게 */
+      radial-gradient(
+        18px 30px at 22% 34%,
+        rgba(60, 34, 16, 0.5),
+        transparent 70%
+      ),
+      radial-gradient(
+        14px 24px at 74% 68%,
+        rgba(60, 34, 16, 0.42),
+        transparent 70%
+      ),
+      /* 4) 안쪽으로 갈수록 어두워지는 기본 목재 */
+      linear-gradient(170deg, var(--wood-light) 0%, var(--wood-mid) 42%, var(--wood-dark) 100%);
     background-size:
       100% calc(var(--shelf-book-h) + var(--shelf-row-gap)),
       100% 100%,
+      100% 100%,
+      100% 100%,
+      100% 100%,
       100% 100%;
     box-shadow:
-      inset 0 3px 10px rgba(0, 0, 0, 0.55),
-      0 12px 30px rgba(0, 0, 0, 0.32);
+      /* 안쪽 깊이감 */
+      inset 0 6px 18px rgba(0, 0, 0, 0.6),
+      inset 0 -3px 10px rgba(0, 0, 0, 0.45),
+      /* 가구가 바닥에 놓인 그림자 */
+      0 18px 40px rgba(0, 0, 0, 0.38),
+      0 3px 0 rgba(0, 0, 0, 0.25);
   }
 
-  /* 좌우 세로 기둥(책장 옆판) */
+  /* 좌우 옆판 — 앞면 모서리에 빛을 받아 두께가 보이게 */
   .bookshelf::before,
   .bookshelf::after {
     content: "";
@@ -232,16 +308,31 @@ body {
     top: 0;
     bottom: 0;
     width: var(--shelf-post-w);
-    background: linear-gradient(to right, #3d2716, #6b4830 45%, #3d2716);
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.1) 0px,
+        rgba(0, 0, 0, 0.1) 1px,
+        transparent 1px,
+        transparent 9px
+      ),
+      linear-gradient(
+        to right,
+        var(--wood-dark) 0%,
+        var(--wood-light) 38%,
+        var(--wood-mid) 72%,
+        var(--wood-dark) 100%
+      );
+    box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.55);
+    z-index: 2;
   }
   .bookshelf::before {
     left: 0;
-    border-radius: 10px 0 0 10px;
+    border-radius: 8px 0 0 6px;
   }
   .bookshelf::after {
     right: 0;
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 8px 6px 0;
   }
 
   .bookshelf-grid {
@@ -249,24 +340,38 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     align-content: flex-start;
-    column-gap: 14px;
+    column-gap: 10px;
     row-gap: var(--shelf-row-gap);
+    position: relative;
+    z-index: 1;
   }
 
-  /* 책 한 권 = 앨범 하나(표지가 정면으로 보이는 형태). 큰 터치 영역(가로 112px×세로
-     176px)을 확보해 부모님 세대도 쉽게 탭할 수 있게 한다 — 실사용 중 겪은 "긴 텍스트
-     nowrap → 모바일 잘림" 버그의 재발을 막기 위해 제목은 항상 .book-label 안에서
-     line-clamp로만 줄인다(nowrap 금지). 책등(제본)은 왼쪽 한쪽에만 표현해 "칩"처럼
-     보이지 않고 표지+책등이 명확히 구분되게 한다. 책배(페이지 단면)도 위쪽 한 곳에만
-     둬서 하나의 일관된 시점(살짝 위에서 내려다보는 각도)으로 보이게 한다. */
   /* 책 한 권이 3D로 열릴 무대. perspective를 부모에 둬야 자식의 rotateY가 원근감 있게
      보인다(스킬 명세: perspective 1000px 이상). */
   .book-stage {
-    perspective: 1200px;
+    perspective: 1300px;
     perspective-origin: 50% 40%;
     flex-shrink: 0;
-    width: 112px;
+    width: 118px;
     height: var(--shelf-book-h);
+    /* 책이 선반에 놓인 접지 그림자 — 책 바로 아래가 가장 진하다 */
+    position: relative;
+  }
+
+  .book-stage::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    right: 0;
+    bottom: -3px;
+    height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(
+      50% 100% at 50% 0%,
+      rgba(0, 0, 0, 0.55),
+      transparent 75%
+    );
+    pointer-events: none;
   }
 
   .book-spine {
@@ -278,7 +383,9 @@ body {
     will-change: transform;
   }
 
-  /* 표지: 책등(왼쪽 모서리)을 축으로 열린다 */
+  /* ── 앨범 표지 ────────────────────────────────────────────────────────
+     양장 사진첩의 가죽 표지. 재질(가죽결) → 모서리 압인 테두리 → 금박 라벨 →
+     책등의 밴드(hubs) 순으로 층을 쌓는다. */
   .book-cover {
     position: absolute;
     inset: 0;
@@ -286,25 +393,59 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 14px 10px 10px 16px;
-    border-radius: 2px 6px 6px 2px;
+    gap: 7px;
+    padding: 18px 12px 14px 22px;
+    border-radius: 2px 7px 7px 2px;
     color: #fff;
     background-color: var(--book-color, #7a4a3a);
-    background-image: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.45) 0%,
-      rgba(0, 0, 0, 0.45) 9%,
-      rgba(255, 255, 255, 0.22) 9%,
-      rgba(255, 255, 255, 0.22) 15%,
-      rgba(255, 255, 255, 0.02) 30%,
-      rgba(0, 0, 0, 0.12) 100%
-    );
-    box-shadow: 4px 6px 10px rgba(0, 0, 0, 0.4);
+    background-image:
+      /* 가죽결 — 미세한 요철을 두 방향으로 겹친다 */
+      repeating-linear-gradient(
+        43deg,
+        rgba(255, 255, 255, 0.05) 0px,
+        rgba(255, 255, 255, 0.05) 1px,
+        transparent 1px,
+        transparent 4px
+      ),
+      repeating-linear-gradient(
+        137deg,
+        rgba(0, 0, 0, 0.07) 0px,
+        rgba(0, 0, 0, 0.07) 1px,
+        transparent 1px,
+        transparent 5px
+      ),
+      /* 책등(왼쪽 띠)과 표지의 명암 분리 */
+      linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.55) 0%,
+        rgba(0, 0, 0, 0.42) 7%,
+        rgba(255, 255, 255, 0.26) 8%,
+        rgba(255, 255, 255, 0.1) 13%,
+        rgba(255, 255, 255, 0.03) 26%,
+        rgba(0, 0, 0, 0.1) 78%,
+        rgba(0, 0, 0, 0.24) 100%
+      );
+    box-shadow:
+      /* 표지 자체의 두께 */
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.35),
+      /* 선반에 드리우는 그림자 */
+      5px 8px 14px rgba(0, 0, 0, 0.45);
     transform-origin: left center;
     transform-style: preserve-3d;
     backface-visibility: hidden;
     will-change: transform;
+  }
+
+  /* 모서리 압인(blind tooling) 테두리 — 양장본 표지의 대표적인 장식 */
+  .book-cover::after {
+    content: "";
+    position: absolute;
+    inset: 10px 8px 10px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
   }
 
   /* 책배(위쪽 페이지 단면) — 표지에 붙어 함께 회전한다 */
@@ -312,64 +453,68 @@ body {
     content: "";
     position: absolute;
     top: 0;
-    left: 12%;
-    right: 4px;
-    height: 5px;
+    left: 9%;
+    right: 3px;
+    height: 6px;
     border-radius: 0 3px 0 0;
     background: repeating-linear-gradient(
       to right,
-      rgba(255, 255, 255, 0.92) 0px,
-      rgba(255, 255, 255, 0.92) 1px,
-      rgba(205, 195, 178, 0.92) 1px,
-      rgba(205, 195, 178, 0.92) 2px
+      rgba(255, 253, 245, 0.95) 0px,
+      rgba(255, 253, 245, 0.95) 1px,
+      rgba(198, 186, 165, 0.9) 1px,
+      rgba(198, 186, 165, 0.9) 2px
     );
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   }
 
-  /* 열림 각도에 따라 표지에 스치는 빛 — 각도가 커질수록 어두워져 두께감을 만든다 */
+  /* 열림 각도에 따라 표지에 스치는 빛 + 책등의 밴드 */
   .book-cover-sheen {
     position: absolute;
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: linear-gradient(
-      100deg,
-      rgba(255, 255, 255, 0.28),
-      rgba(255, 255, 255, 0.04) 35%,
-      rgba(0, 0, 0, 0.22) 100%
-    );
-  }
-
-  /* 표지가 열리면 드러나는 속지(종이면) */
-  .book-inner {
-    position: absolute;
-    inset: 0;
-    border-radius: 2px 6px 6px 2px;
-    background: linear-gradient(to right, #e8dcc6 0%, #fbf6ec 12%, #fbf6ec 100%);
-    box-shadow: inset 6px 0 10px rgba(0, 0, 0, 0.18);
-    overflow: hidden;
-    z-index: -1;
-  }
-
-  .book-inner-lines {
-    position: absolute;
-    inset: 18px 12px 18px 22px;
-    background: repeating-linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.07) 0px,
-      rgba(0, 0, 0, 0.07) 1px,
-      transparent 1px,
-      transparent 9px
-    );
+    background-image:
+      /* 책등을 가로지르는 밴드 4개 — 양장본의 hubs */
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 26px,
+        rgba(0, 0, 0, 0.28) 26px,
+        rgba(0, 0, 0, 0.28) 29px,
+        rgba(255, 255, 255, 0.14) 29px,
+        rgba(255, 255, 255, 0.14) 31px,
+        transparent 31px,
+        transparent 46px
+      ),
+      linear-gradient(
+        100deg,
+        rgba(255, 255, 255, 0.3),
+        rgba(255, 255, 255, 0.05) 32%,
+        rgba(0, 0, 0, 0.26) 100%
+      );
+    background-size:
+      9% 100%,
+      100% 100%;
+    background-repeat: no-repeat;
   }
 
   /* 표지 라벨(금박 패널 느낌) — 제목은 반드시 이 안에서 line-clamp로만 처리 */
   .book-label {
     width: 100%;
-    background: rgba(255, 255, 255, 0.14);
-    border-top: 1px solid rgba(255, 255, 255, 0.35);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
-    padding: 6px 4px;
+    padding: 7px 5px;
     border-radius: 2px;
+    /* 금박 각인 느낌 — 얇은 금선 테두리 + 글자에 살짝 음각 그림자 */
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 236, 190, 0.2),
+      rgba(255, 214, 140, 0.09)
+    );
+    border-top: 1px solid rgba(255, 226, 165, 0.6);
+    border-bottom: 1px solid rgba(255, 226, 165, 0.6);
+    color: #fdf1d8;
+    text-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.45),
+      0 0 6px rgba(255, 214, 140, 0.35);
   }
 
   /* 앨범을 펼친 모양의 프레임 — 나무 책장과 마찬가지로 테마와 무관하게 항상 따뜻한
@@ -482,6 +627,111 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
+
+/* ── 계절 입자 ────────────────────────────────────────────────────────────
+   CSS 애니메이션만 쓰고 transform/opacity만 건드린다. 컨테이너가 화면을 덮되
+   overflow:hidden이라 입자가 밖으로 나가도 가로 스크롤이 생기지 않는다. */
+.season-particles {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.season-particle {
+  position: absolute;
+  top: -8vh;
+  display: block;
+  will-change: transform;
+  animation-name: particle-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes particle-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg) scale(var(--particle-scale, 1));
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--particle-drift, 0), 112vh, 0) rotate(320deg)
+      scale(var(--particle-scale, 1));
+    opacity: 0;
+  }
+}
+
+/* 봄 — 벚꽃잎: 한쪽이 파인 타원 */
+.season-particle-spring {
+  width: 12px;
+  height: 10px;
+  background: radial-gradient(circle at 30% 30%, #ffd9e6, #f4a8c4);
+  border-radius: 60% 40% 55% 45% / 60% 60% 40% 40%;
+  box-shadow: inset -1px -1px 2px rgba(180, 90, 130, 0.25);
+}
+
+/* 여름 — 햇살 반짝임: 작고 밝은 점, 회전보다 명멸이 어울린다 */
+.season-particle-summer {
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255, 250, 200, 0.9) 40%, transparent 70%);
+  border-radius: 50%;
+  animation-name: particle-drift-shimmer;
+}
+
+@keyframes particle-drift-shimmer {
+  0% {
+    transform: translate3d(0, -8vh, 0) scale(var(--particle-scale, 1));
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.35;
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(var(--particle-drift, 0), 108vh, 0)
+      scale(var(--particle-scale, 1));
+    opacity: 0;
+  }
+}
+
+/* 가을 — 낙엽: 잎맥이 보이는 단풍색 */
+.season-particle-autumn {
+  width: 13px;
+  height: 13px;
+  background:
+    linear-gradient(to bottom, rgba(120, 50, 10, 0.35) 0 1px, transparent 1px),
+    radial-gradient(circle at 35% 30%, #f0a24a, #c1541f);
+  border-radius: 0 70% 0 70%;
+  box-shadow: inset -1px -1px 2px rgba(110, 45, 10, 0.3);
+}
+
+/* 겨울 — 눈: 부드러운 흰 점 */
+.season-particle-winter {
+  width: 9px;
+  height: 9px;
+  background: radial-gradient(circle at 35% 35%, #ffffff, rgba(226, 240, 255, 0.75));
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.75);
+}
+
+/* 본문이 입자 위에 오도록 */
+.app-shell {
+  position: relative;
+  z-index: 1;
+}
+
 /* 앨범을 닫을 때 화면 위를 덮는 표지 — 왼쪽(책등)을 축으로 덮인다 */
 .book-closing-veil {
   position: fixed;
@@ -506,6 +756,11 @@ body {
   .book-cover,
   .book-spine {
     transition: none !important;
+  }
+  /* 흩날리는 입자는 완전히 멈춘다 — 계속 움직이는 배경은 어지러움을 유발하기 쉽다 */
+  .season-particle {
+    animation: none !important;
+    opacity: 0 !important;
   }
   .pswp .pswp__bg {
     backdrop-filter: none;

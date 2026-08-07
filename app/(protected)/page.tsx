@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createServerSupabaseClient } from "@/lib/supabase";
-import { ThemeHintBubble } from "@/components/ThemeHintBubble";
 import { FeedbackBanner } from "@/components/FeedbackBanner";
 import { CreateAlbumButton } from "@/components/CreateAlbumButton";
 import { QuickUploadButton } from "@/components/QuickUploadButton";
@@ -26,8 +25,8 @@ interface AlbumRow {
   photos: { count: number }[];
 }
 
-// 실제 책장처럼 책마다 표지색이 다르게 보이도록 순환시키는 팔레트. 앱 테마(살구/하늘/분홍/연두)와는
-// 무관 — 책 표지색은 가구/소품의 색이지 테마가 적용되는 UI 크롬이 아니라고 판단.
+// 실제 책장처럼 책마다 표지색이 다르게 보이도록 순환시키는 팔레트. 계절 테마와는
+// 무관 — 책 표지색은 가구/소품의 색이라 계절 따라 바뀌지 않는 게 자연스럽다.
 const BOOK_COLORS = [
   "#8B3A3A",
   "#2F4B5C",
@@ -81,8 +80,6 @@ export default async function AlbumListPage({
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-20">
-      <ThemeHintBubble />
-
       <h1 className="mb-10 text-2xl font-semibold text-foreground">앨범 목록</h1>
 
       <FeedbackBanner msg={msg} count={count} />

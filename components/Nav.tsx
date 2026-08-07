@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 export function Nav() {
   const pathname = usePathname();
@@ -20,7 +19,6 @@ export function Nav() {
       >
         가족 아카이브
       </Link>
-      <ThemeSwitcher />
     </nav>
   );
 }
