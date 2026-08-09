@@ -667,8 +667,10 @@ body {
   }
 }
 
-/* 봄 — 벚꽃잎: 한쪽이 파인 타원 */
-.season-particle-spring {
+/* 계절별 생김새는 <html data-season>이 결정한다 — 수동 전환 시 즉시 반영된다 */
+
+/* 봄 — 벚꽃잎: 한쪽이 파인 타원이 팔랑이며 떨어진다 */
+:root[data-season="spring"] .season-particle {
   width: 12px;
   height: 10px;
   background: radial-gradient(circle at 30% 30%, #ffd9e6, #f4a8c4);
@@ -676,38 +678,47 @@ body {
   box-shadow: inset -1px -1px 2px rgba(180, 90, 130, 0.25);
 }
 
-/* 여름 — 햇살 반짝임: 작고 밝은 점, 회전보다 명멸이 어울린다 */
-.season-particle-summer {
-  width: 6px;
-  height: 6px;
-  background: radial-gradient(circle, #ffffff 0%, rgba(255, 250, 200, 0.9) 40%, transparent 70%);
+/* 여름 — 햇빛에 뜬 먼지·아지랑이.
+   떨어지면 그냥 눈으로 보이므로(실제로 겨울로 오인된 적 있음) 아래에서 위로 천천히
+   떠오르게 하고, 색도 흰색이 아니라 따뜻한 금빛으로 둔다. */
+:root[data-season="summer"] .season-particle {
+  width: 7px;
+  height: 7px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 246, 214, 0.95) 0%,
+    rgba(255, 214, 130, 0.75) 45%,
+    transparent 72%
+  );
   border-radius: 50%;
-  animation-name: particle-drift-shimmer;
+  top: auto;
+  bottom: -6vh;
+  animation-name: particle-rise;
 }
 
-@keyframes particle-drift-shimmer {
+@keyframes particle-rise {
   0% {
-    transform: translate3d(0, -8vh, 0) scale(var(--particle-scale, 1));
+    transform: translate3d(0, 0, 0) scale(var(--particle-scale, 1));
     opacity: 0;
   }
-  15% {
-    opacity: 0.9;
-  }
-  50% {
-    opacity: 0.35;
-  }
-  85% {
+  12% {
     opacity: 0.85;
   }
+  55% {
+    opacity: 0.45;
+  }
+  88% {
+    opacity: 0.7;
+  }
   100% {
-    transform: translate3d(var(--particle-drift, 0), 108vh, 0)
+    transform: translate3d(var(--particle-drift, 0), -112vh, 0)
       scale(var(--particle-scale, 1));
     opacity: 0;
   }
 }
 
 /* 가을 — 낙엽: 잎맥이 보이는 단풍색 */
-.season-particle-autumn {
+:root[data-season="autumn"] .season-particle {
   width: 13px;
   height: 13px;
   background:
@@ -718,7 +729,7 @@ body {
 }
 
 /* 겨울 — 눈: 부드러운 흰 점 */
-.season-particle-winter {
+:root[data-season="winter"] .season-particle {
   width: 9px;
   height: 9px;
   background: radial-gradient(circle at 35% 35%, #ffffff, rgba(226, 240, 255, 0.75));

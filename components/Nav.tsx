@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SeasonSwitcher } from "@/components/SeasonSwitcher";
 
 export function Nav() {
   const pathname = usePathname();
@@ -19,6 +20,7 @@ export function Nav() {
       >
         가족 아카이브
       </Link>
+      <SeasonSwitcher />
     </nav>
   );
 }

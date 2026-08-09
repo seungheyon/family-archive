@@ -20,6 +20,11 @@ export function getSeason(now: Date = new Date()): Season {
   return "spring";
 }
 
+export const SEASONS: Season[] = ["spring", "summer", "autumn", "winter"];
+
+/** 계절을 수동으로 고정했을 때 저장하는 키. 값이 없으면 날짜 자동 판정을 쓴다. */
+export const SEASON_OVERRIDE_KEY = "family-archive-season";
+
 export const SEASON_LABEL: Record<Season, string> = {
   spring: "봄",
   summer: "여름",

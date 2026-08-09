@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { DURATION, SPRING_SLOW } from "@/lib/motion";
+import { SPRING_SLOW } from "@/lib/motion";
 
 /**
  * 앨범에서 목록으로 돌아가는 링크.
@@ -23,7 +23,9 @@ export function BookCloseLink({ children }: { children: React.ReactNode }) {
     e.preventDefault();
     if (closing) return;
     setClosing(true);
-    window.setTimeout(() => router.push("/"), DURATION.slow * 1000);
+    // 덮개 연출과 이동을 겹친다. 예전에는 연출이 끝나는 800ms 뒤에 push했는데,
+    // 그동안 목록을 받아오지도 않아 대기 시간이 그대로 더해졌다(BookSpine과 동일한 문제).
+    router.push("/");
   }
 
   return (
@@ -31,6 +33,8 @@ export function BookCloseLink({ children }: { children: React.ReactNode }) {
       <a
         href="/"
         onClick={close}
+        onPointerEnter={() => router.prefetch("/")}
+        onPointerDown={() => router.prefetch("/")}
         className="mb-4 inline-block text-sm text-muted hover:text-accent"
       >
         {children}

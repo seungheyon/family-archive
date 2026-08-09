@@ -1,4 +1,4 @@
-import { PARTICLE_COUNT, type Season } from "@/lib/season";
+import { PARTICLE_COUNT } from "@/lib/season";
 
 /**
  * 계절마다 화면을 가로질러 떠다니는 요소(벚꽃잎·햇살 반짝임·낙엽·눈).
@@ -9,8 +9,11 @@ import { PARTICLE_COUNT, type Season } from "@/lib/season";
  *
  * `left`는 퍼센트로만 배치하고 컨테이너에 overflow:hidden을 둬서, 입자가 화면 밖으로
  * 나가며 가로 스크롤을 만드는 일(이전에 겪은 화면 밀림)이 생기지 않게 한다.
+ *
+ * 생김새는 클래스가 아니라 `<html data-season>`에 딸린 CSS가 결정한다 — 그래야 계절을
+ * 수동으로 바꿨을 때 다시 렌더링하지 않고도 즉시 모양이 바뀐다.
  */
-export function SeasonParticles({ season }: { season: Season }) {
+export function SeasonParticles() {
   // 규칙적으로 흩어지되 매번 같은 자리에 나오도록 결정적으로 계산한다
   // (서버·클라이언트 렌더 결과가 달라지면 hydration 경고가 난다)
   const particles = Array.from({ length: PARTICLE_COUNT }, (_, i) => {
@@ -27,7 +30,7 @@ export function SeasonParticles({ season }: { season: Season }) {
       {particles.map((p) => (
         <span
           key={p.i}
-          className={`season-particle season-particle-${season}`}
+          className="season-particle"
           style={
             {
               left: `${p.left}%`,

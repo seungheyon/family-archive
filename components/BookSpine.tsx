@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { DURATION, SPRING, SPRING_SLOW, tiltFromPointer } from "@/lib/motion";
+import { SPRING, SPRING_SLOW, tiltFromPointer } from "@/lib/motion";
 
 /**
  * 책장에 꽂힌 책 한 권(앨범 하나).
@@ -49,8 +49,16 @@ export function BookSpine({
     if (phase !== "closed") return;
     resetTilt();
     setPhase("opening");
-    // 표지가 다 열린 뒤 이동 — 여기서 이동해버리면 열림이 끊겨 보인다
-    window.setTimeout(() => router.push(`/albums/${albumId}`), DURATION.slow * 1000);
+    // 이동을 즉시 시작하고 표지 열림은 그 위에서 계속 재생한다. 예전에는 열림이 끊겨
+    // 보이는 것을 막으려고 800ms를 기다린 뒤 push했는데, 그동안 네트워크 요청조차
+    // 시작되지 않아 연출 시간이 응답 시간에 그대로 더해졌다(탭에서 사진까지 약 2초).
+    // 연출과 통신을 겹치면 체감 시간은 둘 중 긴 쪽이 된다.
+    router.push(`/albums/${albumId}`);
+  }
+
+  // 손가락이 닿는 순간(=클릭이 확정되기 전) 미리 받아두면 실제 이동이 거의 즉시 끝난다.
+  function prefetch() {
+    router.prefetch(`/albums/${albumId}`);
   }
 
   return (
@@ -59,6 +67,8 @@ export function BookSpine({
       className="book-stage"
       onPointerMove={handlePointerMove}
       onPointerLeave={resetTilt}
+      onPointerEnter={prefetch}
+      onPointerDown={prefetch}
     >
       <motion.div
         className="book-spine"

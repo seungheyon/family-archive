@@ -32,8 +32,15 @@ export const SPRING_SLOW: Transition = {
   damping: 22,
 };
 
-/** 내지 사진이 순차 등장할 때의 간격 (스킬 명세: 50~100ms) */
-export const STAGGER_SECONDS = 0.06;
+/**
+ * 내지 사진이 순차 등장할 때의 간격.
+ *
+ * 스킬 명세는 50~100ms지만 그 하한보다 더 짧게 잡았다. 예전에는 여기에 더해
+ * `delayChildren`으로 300ms를 먼저 비웠는데, 사진이 보이기까지의 시간에 그대로
+ * 얹히는 값이라 "앨범이 느리다"는 체감의 한 축이었다. 화면 첫 줄이 즉시 차는 것이
+ * 순차 등장의 리듬보다 중요하다고 보고 지연은 없애고 간격만 남겼다.
+ */
+export const STAGGER_SECONDS = 0.04;
 
 /** 펼쳐진 뒤 사진들이 하나씩 나타나는 컨테이너/아이템 variants */
 export const photoStagger: Variants = {
@@ -41,7 +48,6 @@ export const photoStagger: Variants = {
   visible: {
     transition: {
       staggerChildren: STAGGER_SECONDS,
-      delayChildren: DURATION.fast,
     },
   },
 };
