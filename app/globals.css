@@ -386,16 +386,77 @@ body {
   /* ── 앨범 표지 ────────────────────────────────────────────────────────
      양장 사진첩의 가죽 표지. 재질(가죽결) → 모서리 압인 테두리 → 금박 라벨 →
      책등의 밴드(hubs) 순으로 층을 쌓는다. */
-  .book-cover {
+  /* 표지가 넘어가면 드러나는 면지(양장본 안쪽 종이).
+     예전에는 여기에 스타일이 없는 빈 div가 있어서, 표지가 열린 뒤 이동이 끝날 때까지
+     흰 박스가 노출됐다(사용자에게는 "실제보다 작은 스켈레톤"으로 보였다). */
+  .book-endpaper {
     position: absolute;
     inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 18px 12px 14px 22px;
     border-radius: 2px 7px 7px 2px;
+    transform: translateZ(-1px);
+    background-color: #ece0c8;
+    background-image:
+      repeating-linear-gradient(
+        62deg,
+        rgba(150, 110, 70, 0.14) 0px,
+        rgba(150, 110, 70, 0.14) 2px,
+        transparent 2px,
+        transparent 9px
+      ),
+      repeating-linear-gradient(
+        -48deg,
+        rgba(120, 85, 55, 0.12) 0px,
+        rgba(120, 85, 55, 0.12) 1px,
+        transparent 1px,
+        transparent 7px
+      ),
+      radial-gradient(
+        130% 100% at 100% 50%,
+        rgba(255, 250, 238, 0.85),
+        rgba(206, 183, 148, 0.55) 75%
+      );
+    /* 책등 쪽이 가장 어둡다 — 펼친 책 안쪽으로 빛이 덜 드는 것 */
+    box-shadow:
+      inset 14px 0 20px rgba(80, 52, 30, 0.42),
+      inset 0 0 26px rgba(90, 60, 35, 0.22);
+  }
+
+  /* 표지 전체를 담는 그릇. 여기서 3D 좌표계가 시작된다 */
+  .book-cover-root {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+
+  /* 조각 = 회전만 담당하는 투명한 그릇. 첫 조각만 표지 왼쪽 끝에 붙고,
+     나머지는 각각 부모의 오른쪽 끝에 이어 붙어 같은 폭을 가진다. */
+  .book-strip {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    left: 100%;
+    width: 100%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .book-strip-first {
+    left: 0;
+    width: 10%;
+  }
+
+  /* 조각의 앞면 = 표지 그림. 그림을 조각 폭의 10배로 늘린 뒤 자기 몫만 잘라 쓴다 */
+  .book-strip-face,
+  .book-strip-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    background-size: 1000% 100%;
+    background-repeat: no-repeat;
+  }
+
+  .book-strip-face {
     color: #fff;
     background-color: var(--book-color, #7a4a3a);
     background-image:
@@ -426,19 +487,80 @@ body {
         rgba(0, 0, 0, 0.24) 100%
       );
     box-shadow:
-      /* 표지 자체의 두께 */
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+  }
+
+  /* 첫 조각에만 선반 그림자를 준다 — 조각마다 주면 열릴 때 그림자가 10겹으로 겹친다 */
+  .book-strip-first > .book-strip-face,
+  .book-strip-first > .book-strip-back {
+    border-radius: 2px 0 0 2px;
+  }
+
+  .book-strip-first > .book-strip-face {
+    box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
       inset 0 -2px 4px rgba(0, 0, 0, 0.35),
-      /* 선반에 드리우는 그림자 */
       5px 8px 14px rgba(0, 0, 0, 0.45);
-    transform-origin: left center;
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
-    will-change: transform;
+  }
+
+  /* 조각이 꺾인 각도만큼 덮이는 그늘 */
+  .book-strip-shade {
+    position: absolute;
+    inset: 0;
+    background: #1a0f08;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 넘어간 표지의 안쪽 = 마블링 면지. 앞면과 등을 맞대고 뒤집혀 있다 */
+  .book-strip-back {
+    transform: rotateY(180deg);
+    background-color: #efe3cd;
+    background-image:
+      repeating-linear-gradient(
+        62deg,
+        rgba(150, 110, 70, 0.16) 0px,
+        rgba(150, 110, 70, 0.16) 2px,
+        transparent 2px,
+        transparent 9px
+      ),
+      repeating-linear-gradient(
+        -48deg,
+        rgba(120, 85, 55, 0.13) 0px,
+        rgba(120, 85, 55, 0.13) 1px,
+        transparent 1px,
+        transparent 7px
+      ),
+      radial-gradient(
+        120% 90% at 0% 50%,
+        rgba(255, 250, 238, 0.9),
+        rgba(214, 192, 158, 0.5) 70%
+      );
+    box-shadow: inset 0 0 22px rgba(90, 60, 35, 0.3);
+  }
+
+  /* 표지에 얹히는 라벨·날짜·장수 판. 조각을 가로지르므로 잘리지 않게 첫 조각 위에
+     표지 전체 폭으로 펼쳐두고, 넘어가기 시작하면 곧바로 사라진다. */
+  .book-cover-plate {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1000%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 18px 12px 14px 22px;
+    color: #fff;
+    pointer-events: none;
+    z-index: 2;
   }
 
   /* 모서리 압인(blind tooling) 테두리 — 양장본 표지의 대표적인 장식 */
-  .book-cover::after {
+  .book-cover-plate::after {
     content: "";
     position: absolute;
     inset: 10px 8px 10px 18px;
@@ -449,7 +571,7 @@ body {
   }
 
   /* 책배(위쪽 페이지 단면) — 표지에 붙어 함께 회전한다 */
-  .book-cover::before {
+  .book-cover-plate::before {
     content: "";
     position: absolute;
     top: 0;
@@ -764,7 +886,8 @@ body {
 /* 모션이 부담스럽거나 어지러운 사용자를 위한 안전장치 — OS 설정을 존중한다.
    이 프로젝트는 부모님 세대가 주 사용자라 특히 중요하다. */
 @media (prefers-reduced-motion: reduce) {
-  .book-cover,
+  .book-strip,
+  .book-strip-face,
   .book-spine {
     transition: none !important;
   }

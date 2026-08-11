@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import { SPRING, SPRING_SLOW, tiltFromPointer } from "@/lib/motion";
+import { BookCover } from "@/components/BookCover";
 
 /**
  * 책장에 꽂힌 책 한 권(앨범 하나).
@@ -97,31 +98,17 @@ export function BookSpine({
           }
         }}
       >
-        {/* 표지 — 책등을 회전축(left)으로 열린다 */}
-        <motion.div
-          className="book-cover"
-          initial={false}
-          animate={{ rotateY: phase === "opening" ? -155 : 0 }}
-          whileHover={phase === "closed" ? { rotateY: -5 } : undefined}
-          transition={phase === "opening" ? SPRING_SLOW : SPRING}
-        >
-          <span className="book-label">
-            <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
-              {title}
-            </span>
-          </span>
-          <span className="text-[10px] text-white/75">{dateLabel}</span>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
-            사진 {photoCount}장
-          </span>
-          {/* 열림 각도에 따라 밝기가 변하는 오버레이 — 입체감의 핵심 */}
-          <div className="book-cover-sheen" aria-hidden="true" />
-        </motion.div>
+        {/* 표지가 열리면 드러나는 면지(양장본 안쪽 마블링 종이).
+            표지보다 뒤에 깔려 있다가 넘어가면서 드러난다. */}
+        <div className="book-endpaper" aria-hidden="true" />
 
-        {/* 표지가 열리면 드러나는 속지 */}
-        <div className="book-inner" aria-hidden="true">
-          <div className="book-inner-lines" />
-        </div>
+        {/* 표지 — 책등을 회전축으로, 조각별 곡률을 가지고 넘어간다 */}
+        <BookCover
+          opening={phase === "opening"}
+          title={title}
+          dateLabel={dateLabel}
+          photoCount={photoCount}
+        />
       </motion.div>
     </div>
   );
