@@ -40,9 +40,24 @@ export function BookCover({
 
   return (
     <div className="book-cover-root">
-      {/* 책배(속장의 윗면). 표지 회전 영역 밖에 있어 표지를 침범하지 않고, 표지가
-          넘어가도 제자리에 남는다 — 실물에서도 표지만 넘어가고 책배는 그대로다. */}
-      <span className="book-page-block" aria-hidden="true" />
+      {/* 책 맨 위의 마감. 책등이 책배 높이까지 올라오고(cap), 그 오른쪽에 책배가 놓인다.
+          책배는 왼쪽으로 당겨 책등을 살짝 덮고, 오른쪽은 표지의 둥근 모서리를 피한다.
+          넘김이 시작되면 둘 다 사라진다 — 표지가 젖혀진 뒤에도 남아 있으면 허공에 뜬
+          조각처럼 보이기 때문이다. */}
+      <motion.span
+        className="book-spine-cap"
+        aria-hidden="true"
+        initial={false}
+        animate={{ opacity: opening ? 0 : 1 }}
+        transition={{ duration: DURATION.fast, ease: PAPER_EASE }}
+      />
+      <motion.span
+        className="book-page-block"
+        aria-hidden="true"
+        initial={false}
+        animate={{ opacity: opening ? 0 : 1 }}
+        transition={{ duration: DURATION.fast, ease: PAPER_EASE }}
+      />
 
       <motion.div
         className="book-cover-turn"

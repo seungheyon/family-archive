@@ -433,13 +433,35 @@ body {
     표지가 넘어가도 이 층은 회전하지 않는다 — 책배는 표지가 아니라 속장의 윗면이라
     실물에서도 표지만 넘어가고 책배는 제자리에 남는다.
   */
+  /*
+    책등이 책 맨 위까지 올라오게 하는 마감.
+    표지가 책배 높이만큼 내려가면서 책등도 같이 내려가 top-left가 비어 보였다. 이 조각이
+    그 빈 자리를 표지와 똑같은 그림으로 메운다 — `.book-cover-face`와 배경을 공유하되
+    가로로 크게 늘려 왼쪽 책등 부분만 잘라 쓴다(그래서 색과 결이 정확히 이어진다).
+  */
+  .book-spine-cap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 9%;
+    height: var(--book-edge-h);
+    border-radius: 2px 0 0 0;
+    background-size: auto, auto, 1111% 100%;
+    background-position: 0 0, 0 0, 0 0;
+    background-repeat: repeat, repeat, no-repeat;
+    background-blend-mode: overlay, soft-light, normal;
+    pointer-events: none;
+  }
+
   .book-page-block {
     position: absolute;
     top: 0;
-    left: 9%;
-    right: 3px;
+    /* 왼쪽은 책등을 살짝 덮고(9% → 5%), 오른쪽은 표지의 둥근 모서리(반지름 7px)에
+       닿지 않도록 물러난다 */
+    left: 5%;
+    right: 10px;
     height: var(--book-edge-h);
-    border-radius: 0 3px 0 0;
+    border-radius: 0 2px 0 0;
     /*
       선 0.8px, 주기 1.3px로 아주 촘촘하게 — "가로선이 있구나" 정도만 보이게 한다.
       맨 위의 얇은 하이라이트는 종이 뭉치 윗면이 빛을 받는 것.
@@ -524,7 +546,8 @@ body {
     무두질 얼룩 한 겹. 가죽은 규칙이 없다는 것이 특징이라 반복 그라디언트로는 직물처럼
     보였고, 세로결인 나무 책장 위에서 줄무늬끼리 부딪쳤다. data URI라 요청이 늘지 않는다.
   */
-  .book-cover-face {
+  .book-cover-face,
+  .book-spine-cap {
     color: #fff;
     background-color: var(--book-color, #7a4a3a);
     background-image:
