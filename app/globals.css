@@ -466,28 +466,24 @@ body {
       var(--strip-x) 0,
       var(--strip-slice) 0;
     background-repeat: repeat, repeat, no-repeat;
+    background-blend-mode: overlay, soft-light, normal;
   }
 
   .book-strip-face,
   .book-cover-flat {
     color: #fff;
     background-color: var(--book-color, #7a4a3a);
+    /*
+      가죽 질감.
+      예전에는 43도/137도 반복 그라디언트로 결을 냈는데, 규칙적인 사선 격자라 가죽이 아니라
+      직물처럼 보였고 세로결인 나무 책장 위에서 줄무늬끼리 부딪쳤다. 가죽은 규칙이 없는
+      것이 특징이므로 SVG 난류(feTurbulence) 노이즈 두 겹으로 바꿨다 — 고운 모공 한 겹과
+      무두질 얼룩 한 겹. 이미지 파일이 아니라 data URI라 요청이 늘지 않고, 타일이
+      맞물리게(stitchTiles) 만들어 조각 경계에서도 무늬가 이어진다.
+    */
     background-image:
-      /* 가죽결 — 미세한 요철을 두 방향으로 겹친다 */
-      repeating-linear-gradient(
-        43deg,
-        rgba(255, 255, 255, 0.05) 0px,
-        rgba(255, 255, 255, 0.05) 1px,
-        transparent 1px,
-        transparent 4px
-      ),
-      repeating-linear-gradient(
-        137deg,
-        rgba(0, 0, 0, 0.07) 0px,
-        rgba(0, 0, 0, 0.07) 1px,
-        transparent 1px,
-        transparent 5px
-      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23f)' opacity='0.55'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.045' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)' opacity='0.6'/%3E%3C/svg%3E"),
       /* 책등(왼쪽 띠)과 표지의 명암 분리 */
       linear-gradient(
         to right,
@@ -534,6 +530,7 @@ body {
     background-size: auto, auto, 100% 100%;
     background-position: 0 0, 0 0, 0 0;
     background-repeat: repeat, repeat, no-repeat;
+    background-blend-mode: overlay, soft-light, normal;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
       inset 0 -2px 4px rgba(0, 0, 0, 0.35),
