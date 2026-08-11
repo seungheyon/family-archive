@@ -41,7 +41,17 @@ export function BookCover({
   return (
     <div className="book-cover-root">
       {/* 닫혀 있는 동안에는 조각을 만들지 않는다. 넘어갈 때만 조각으로 바꾼다. */}
-      {opening ? buildStrip(0) : <span className="book-cover-flat" aria-hidden="true" />}
+      {opening ? (
+        buildStrip(0)
+      ) : (
+        // 마우스 환경의 프리뷰 — 표지가 책등을 축으로 3~5도만 들린다(스킬 명세).
+        <motion.span
+          className="book-cover-flat"
+          aria-hidden="true"
+          whileHover={{ rotateY: -5 }}
+          transition={SPRING}
+        />
+      )}
 
       {/* 제목·날짜·장수 판.
           조각 트리 **밖**에 둔다. 예전에 첫 조각 안에 넣었더니 나머지 9조각이 그 자식으로
@@ -94,12 +104,12 @@ export function BookCover({
       <motion.div
         className={index === 0 ? "book-strip book-strip-first" : "book-strip"}
         style={{ zIndex: STRIP_COUNT - index }}
-        initial={false}
-        animate={{ rotateY: opening ? -degrees : 0 }}
-        // 마우스 환경의 프리뷰 — 표지가 3~5도만 들린다(스킬 명세). 첫 조각만 움직이면
-        // 책등에서 살짝 뜬 것처럼 보여서 조각 전체를 건드릴 필요가 없다.
-        whileHover={!opening && index === 0 ? { rotateY: -5 } : undefined}
-        transition={opening ? turn : SPRING}
+        // 조각은 탭한 순간에 비로소 생성되므로, 시작점을 "아직 안 넘어간 상태"로 명시해야
+        // 한다. `initial={false}`를 쓰면 framer가 마운트 시 목표 각도로 곧장 점프해버려서
+        // 반쯤 넘어간 정지 화면만 보이고 넘김이 통째로 사라진다.
+        initial={{ rotateY: 0 }}
+        animate={{ rotateY: -degrees }}
+        transition={turn}
       >
         <span
           className="book-strip-face"
@@ -115,8 +125,8 @@ export function BookCover({
               바깥쪽 조각일수록 빛에서 멀어지므로 더 짙게 깔린다. */}
           <motion.span
             className="book-strip-shade"
-            initial={false}
-            animate={{ opacity: opening ? 0.1 + index * 0.05 : 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.1 + index * 0.05 }}
             transition={turn}
           />
         </span>

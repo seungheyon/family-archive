@@ -527,6 +527,8 @@ body {
   .book-cover-flat {
     position: absolute;
     inset: 0;
+    display: block;
+    transform-origin: left center;
     border-radius: 2px 7px 7px 2px;
     backface-visibility: hidden;
     background-size: auto, auto, 100% 100%;
