@@ -9,6 +9,9 @@ import {
   STRIP_COUNT,
   STRIP_WEIGHTS,
   STRIP_WIDTH_PX,
+  SHADE_MIN,
+  SHADE_STEP,
+  COVER_TURN_SECONDS,
 } from "@/lib/motion";
 
 /**
@@ -95,7 +98,7 @@ export function BookCover({
     const degrees = STRIP_WEIGHTS[index] * COVER_OPEN_DEGREES;
     const delay = index * 0.018;
     const turn = {
-      duration: DURATION.slow,
+      duration: COVER_TURN_SECONDS,
       ease: PAPER_EASE,
       delay,
     };
@@ -125,8 +128,16 @@ export function BookCover({
               바깥쪽 조각일수록 빛에서 멀어지므로 더 짙게 깔린다. */}
           <motion.span
             className="book-strip-shade"
+            // 조각 안에서 농도가 변하고, 다음 조각이 이 조각의 끝 농도에서 이어받는다.
+            // 그늘 자체는 0에서 1로 켜지기만 하므로 계단이 생기지 않는다.
+            style={
+              {
+                "--shade-from": SHADE_MIN + index * SHADE_STEP,
+                "--shade-to": SHADE_MIN + (index + 1) * SHADE_STEP,
+              } as React.CSSProperties
+            }
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.1 + index * 0.05 }}
+            animate={{ opacity: 1 }}
             transition={turn}
           />
         </span>

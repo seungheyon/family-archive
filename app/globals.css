@@ -394,32 +394,22 @@ body {
     inset: 0;
     border-radius: 2px 7px 7px 2px;
     transform: translateZ(-1px);
-    background-color: #ece0c8;
+    background-color: #e6d8b8;
     background-image:
-      repeating-linear-gradient(
-        62deg,
-        rgba(150, 110, 70, 0.14) 0px,
-        rgba(150, 110, 70, 0.14) 2px,
-        transparent 2px,
-        transparent 9px
-      ),
-      repeating-linear-gradient(
-        -48deg,
-        rgba(120, 85, 55, 0.12) 0px,
-        rgba(120, 85, 55, 0.12) 1px,
-        transparent 1px,
-        transparent 7px
-      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23f)' opacity='0.45'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.022' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)' opacity='0.55'/%3E%3C/svg%3E"),
       radial-gradient(
         130% 100% at 100% 50%,
-        rgba(255, 250, 238, 0.85),
-        rgba(206, 183, 148, 0.55) 75%
+        rgba(255, 250, 232, 0.7),
+        rgba(190, 164, 120, 0.6) 80%
       );
+    background-blend-mode: overlay, soft-light, normal;
     /* 책등 쪽이 가장 어둡다 — 펼친 책 안쪽으로 빛이 덜 드는 것 */
     box-shadow:
-      inset 14px 0 20px rgba(80, 52, 30, 0.42),
-      inset 0 0 26px rgba(90, 60, 35, 0.22);
+      inset 14px 0 20px rgba(84, 60, 28, 0.44),
+      inset 0 0 26px rgba(96, 72, 36, 0.24);
   }
+
 
   /* 표지 전체를 담는 그릇. 여기서 3D 좌표계가 시작된다 */
   .book-cover-root {
@@ -538,10 +528,21 @@ body {
   }
 
   /* 조각이 꺾인 각도만큼 덮이는 그늘 */
+  /*
+    조각의 그늘.
+    예전에는 조각마다 단색을 다른 농도로 얹었는데, 조각이 10개라 밝기가 10칸으로 끊겨
+    표지에 세로 줄무늬가 생겼다(사용자에게는 "질감이 세로선으로 바뀐다"로 보였다).
+    지금은 조각 하나 안에서도 왼쪽→오른쪽으로 농도가 변하는 그라디언트를 쓰고, 이웃
+    조각의 시작 농도를 앞 조각의 끝 농도와 같게 맞춰 표지 전체에서 그늘이 연속된다.
+  */
   .book-strip-shade {
     position: absolute;
     inset: 0;
-    background: #1a0f08;
+    background: linear-gradient(
+      to right,
+      rgba(26, 15, 8, var(--shade-from)),
+      rgba(26, 15, 8, var(--shade-to))
+    );
     opacity: 0;
     pointer-events: none;
   }
@@ -549,29 +550,18 @@ body {
   /* 넘어간 표지의 안쪽 = 마블링 면지. 앞면과 등을 맞대고 뒤집혀 있다 */
   .book-strip-back {
     transform: rotateY(180deg);
-    background-color: #efe3cd;
+    background-color: #e6d8b8;
     background-image:
-      repeating-linear-gradient(
-        62deg,
-        rgba(150, 110, 70, 0.16) 0px,
-        rgba(150, 110, 70, 0.16) 2px,
-        transparent 2px,
-        transparent 9px
-      ),
-      repeating-linear-gradient(
-        -48deg,
-        rgba(120, 85, 55, 0.13) 0px,
-        rgba(120, 85, 55, 0.13) 1px,
-        transparent 1px,
-        transparent 7px
-      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23f)' opacity='0.45'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.022' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)' opacity='0.55'/%3E%3C/svg%3E"),
       radial-gradient(
         120% 90% at 0% 50%,
-        rgba(255, 250, 238, 0.9),
-        rgba(214, 192, 158, 0.5) 70%
+        rgba(255, 250, 232, 0.75),
+        rgba(198, 173, 130, 0.55) 78%
       );
-    box-shadow: inset 0 0 22px rgba(90, 60, 35, 0.3);
+    box-shadow: inset 0 0 22px rgba(96, 72, 36, 0.34);
   }
+
 
   /* 표지에 얹히는 라벨·날짜·장수 판. 조각을 가로지르므로 잘리지 않게 첫 조각 위에
      표지 전체 폭으로 펼쳐두고, 넘어가기 시작하면 곧바로 사라진다. */
