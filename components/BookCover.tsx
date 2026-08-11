@@ -40,6 +40,10 @@ export function BookCover({
 
   return (
     <div className="book-cover-root">
+      {/* 책배(속장의 윗면). 표지 회전 영역 밖에 있어 표지를 침범하지 않고, 표지가
+          넘어가도 제자리에 남는다 — 실물에서도 표지만 넘어가고 책배는 그대로다. */}
+      <span className="book-page-block" aria-hidden="true" />
+
       <motion.div
         className="book-cover-turn"
         initial={false}
