@@ -418,59 +418,72 @@ body {
     transform-style: preserve-3d;
   }
 
-  /* 조각 = 회전만 담당하는 투명한 그릇. 첫 조각만 표지 왼쪽 끝에 붙고,
-     나머지는 각각 부모의 오른쪽 끝에 이어 붙어 같은 폭을 가진다. */
-  .book-strip {
+  /* 회전하는 표지 한 장. 조각으로 쪼개지 않으므로 이음매가 생길 수 없다 */
+  .book-cover-turn {
     position: absolute;
-    top: 0;
-    height: 100%;
-    left: 100%;
-    width: 100%;
+    inset: 0;
     transform-origin: left center;
     transform-style: preserve-3d;
     will-change: transform;
   }
 
-  .book-strip-first {
-    left: 0;
-    width: 10%;
-  }
-
-  /* 조각의 앞면 = 표지 그림. 그림을 조각 폭의 10배로 늘린 뒤 자기 몫만 잘라 쓴다 */
-  .book-strip-face,
-  .book-strip-back {
+  /* 표지의 두 면(앞: 가죽 / 뒤: 면지)이 등을 맞대고 한 장을 이룬다 */
+  .book-cover-face,
+  .book-cover-verso {
     position: absolute;
     inset: 0;
+    border-radius: 2px 7px 7px 2px;
+    /* 이게 없으면 뒷면이 앞면 위에 그려져 표지가 항상 종이색으로 보인다 */
     backface-visibility: hidden;
-    /*
-      레이어마다 다르게 다룬다.
-      - 가죽결/마블링(앞의 두 레이어): 원래 크기로 타일링하고, 조각 번호만큼 왼쪽으로
-        밀어 이웃 조각과 무늬를 이어붙인다. 여기까지 10배로 늘리면 고운 결이 굵은
-        세로 줄무늬로 뭉개진다.
-      - 책등 명암(마지막 레이어): 표지 전체를 가로지르는 그라디언트라 10배로 늘린 뒤
-        조각별로 자기 몫만 잘라 쓴다.
-    */
-    background-size: auto, auto, 1000% 100%;
-    background-position:
-      var(--strip-x) 0,
-      var(--strip-x) 0,
-      var(--strip-slice) 0;
     background-repeat: repeat, repeat, no-repeat;
+    background-size: auto, auto, 100% 100%;
     background-blend-mode: overlay, soft-light, normal;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.35),
+      5px 8px 14px rgba(0, 0, 0, 0.45);
   }
 
-  .book-strip-face,
-  .book-cover-flat {
+  /*
+    넘어간 표지의 안쪽(면지).
+    색만 놓고 보면 아래 깔린 면지와 같은 종이라 겹치면 한 장으로 보인다. 실물에서는 표지가
+    면지 위에 얹혀 그림자를 드리우므로, 접히는 쪽에 짙은 그늘과 바깥으로 퍼지는 그림자를
+    줘서 두 장이 분리돼 보이게 한다.
+  */
+  .book-cover-verso {
+    transform: rotateY(180deg);
+    background-color: #ddcda8;
+    background-image:
+      linear-gradient(
+        to left,
+        rgba(60, 40, 18, 0.5) 0%,
+        rgba(60, 40, 18, 0.16) 9%,
+        rgba(255, 255, 255, 0.16) 16%,
+        transparent 42%
+      ),
+      radial-gradient(
+        120% 90% at 100% 50%,
+        rgba(255, 250, 232, 0.55),
+        rgba(186, 160, 116, 0.5) 80%
+      );
+    background-size: 100% 100%, 100% 100%;
+    background-blend-mode: normal, normal;
+    box-shadow:
+      inset -16px 0 22px rgba(74, 52, 22, 0.45),
+      inset 0 0 26px rgba(96, 72, 36, 0.2),
+      -6px 6px 18px rgba(0, 0, 0, 0.42);
+  }
+
+
+  /*
+    표지 앞면 = 가죽.
+    규칙적인 사선 격자 대신 SVG 난류(feTurbulence) 노이즈 두 겹을 쓴다 — 고운 모공 한 겹과
+    무두질 얼룩 한 겹. 가죽은 규칙이 없다는 것이 특징이라 반복 그라디언트로는 직물처럼
+    보였고, 세로결인 나무 책장 위에서 줄무늬끼리 부딪쳤다. data URI라 요청이 늘지 않는다.
+  */
+  .book-cover-face {
     color: #fff;
     background-color: var(--book-color, #7a4a3a);
-    /*
-      가죽 질감.
-      예전에는 43도/137도 반복 그라디언트로 결을 냈는데, 규칙적인 사선 격자라 가죽이 아니라
-      직물처럼 보였고 세로결인 나무 책장 위에서 줄무늬끼리 부딪쳤다. 가죽은 규칙이 없는
-      것이 특징이므로 SVG 난류(feTurbulence) 노이즈 두 겹으로 바꿨다 — 고운 모공 한 겹과
-      무두질 얼룩 한 겹. 이미지 파일이 아니라 data URI라 요청이 늘지 않고, 타일이
-      맞물리게(stitchTiles) 만들어 조각 경계에서도 무늬가 이어진다.
-    */
     background-image:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23f)' opacity='0.55'/%3E%3C/svg%3E"),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.045' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)' opacity='0.6'/%3E%3C/svg%3E"),
@@ -485,83 +498,45 @@ body {
         rgba(0, 0, 0, 0.1) 78%,
         rgba(0, 0, 0, 0.24) 100%
       );
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.35);
   }
 
-  /* 첫 조각에만 선반 그림자를 준다 — 조각마다 주면 열릴 때 그림자가 10겹으로 겹친다 */
-  .book-strip-first > .book-strip-face,
-  .book-strip-first > .book-strip-back {
-    border-radius: 2px 0 0 2px;
-  }
-
-  .book-strip-first > .book-strip-face {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.35),
-      5px 8px 14px rgba(0, 0, 0, 0.45);
-  }
-
-  /*
-    닫혀 있는 표지 = 조각 없는 한 장.
-    조각 구조는 넘어갈 때만 필요한데 예전에는 책장의 모든 책이 항상 10조각을 들고 있었다.
-    책 8권이면 조각 80개, 앞뒷면까지 240여 개가 `will-change`/`backface-visibility`로
-    GPU 레이어를 물고 있어 책장 진입과 스크롤이 그만큼 무거워졌다. 탭한 책만 조각으로
-    바꾸면 되고, 펴져 있을 때의 그림은 이 한 장과 조각 10장이 서로 구분되지 않는다.
+  /* 표면을 훑고 지나가는 광택.
+    회전 각도에 맞춰 왼쪽 밖에서 오른쪽 밖으로 배경 위치가 이동한다. 정지된 표지에서는
+    옅게 깔려 있다가 넘어가는 동안 밝은 띠가 한 번 지나가는데, 이것이 "평평한 판"과
+    "빛을 받는 곡면"을 가르는 가장 큰 단서다.
   */
-  .book-cover-flat {
+  .book-cover-gloss {
     position: absolute;
     inset: 0;
-    display: block;
-    transform-origin: left center;
-    border-radius: 2px 7px 7px 2px;
-    backface-visibility: hidden;
-    background-size: auto, auto, 100% 100%;
-    background-position: 0 0, 0 0, 0 0;
-    background-repeat: repeat, repeat, no-repeat;
-    background-blend-mode: overlay, soft-light, normal;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.35),
-      5px 8px 14px rgba(0, 0, 0, 0.45);
-  }
-
-  /* 조각이 꺾인 각도만큼 덮이는 그늘 */
-  /*
-    조각의 그늘.
-    예전에는 조각마다 단색을 다른 농도로 얹었는데, 조각이 10개라 밝기가 10칸으로 끊겨
-    표지에 세로 줄무늬가 생겼다(사용자에게는 "질감이 세로선으로 바뀐다"로 보였다).
-    지금은 조각 하나 안에서도 왼쪽→오른쪽으로 농도가 변하는 그라디언트를 쓰고, 이웃
-    조각의 시작 농도를 앞 조각의 끝 농도와 같게 맞춰 표지 전체에서 그늘이 연속된다.
-  */
-  .book-strip-shade {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to right,
-      rgba(26, 15, 8, var(--shade-from)),
-      rgba(26, 15, 8, var(--shade-to))
-    );
-    opacity: 0;
+    border-radius: inherit;
     pointer-events: none;
+    background-image: linear-gradient(
+      104deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 28%,
+      rgba(255, 255, 255, 0.42) 46%,
+      rgba(255, 255, 255, 0.08) 64%,
+      transparent 100%
+    );
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
   }
 
-  /* 넘어간 표지의 안쪽 = 마블링 면지. 앞면과 등을 맞대고 뒤집혀 있다 */
-  .book-strip-back {
-    transform: rotateY(180deg);
-    background-color: #e6d8b8;
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23f)' opacity='0.45'/%3E%3C/svg%3E"),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.022' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)' opacity='0.55'/%3E%3C/svg%3E"),
-      radial-gradient(
-        120% 90% at 0% 50%,
-        rgba(255, 250, 232, 0.75),
-        rgba(198, 173, 130, 0.55) 78%
-      );
-    box-shadow: inset 0 0 22px rgba(96, 72, 36, 0.34);
+  /* 경첩(책등) 쪽부터 짙어지는 그늘 — 넘어가는 동안만 켜진다 */
+  .book-cover-shade {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background-image: linear-gradient(
+      to right,
+      rgba(26, 15, 8, 0.62) 0%,
+      rgba(26, 15, 8, 0.34) 24%,
+      rgba(26, 15, 8, 0.12) 58%,
+      rgba(26, 15, 8, 0.04) 100%
+    );
   }
-
 
   /* 표지에 얹히는 라벨·날짜·장수 판. 조각을 가로지르므로 잘리지 않게 첫 조각 위에
      표지 전체 폭으로 펼쳐두고, 넘어가기 시작하면 곧바로 사라진다. */
@@ -910,8 +885,8 @@ body {
 /* 모션이 부담스럽거나 어지러운 사용자를 위한 안전장치 — OS 설정을 존중한다.
    이 프로젝트는 부모님 세대가 주 사용자라 특히 중요하다. */
 @media (prefers-reduced-motion: reduce) {
-  .book-strip,
-  .book-strip-face,
+  .book-cover-turn,
+  .book-cover-gloss,
   .book-spine {
     transition: none !important;
   }

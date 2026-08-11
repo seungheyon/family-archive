@@ -3,32 +3,27 @@
 import { motion } from "framer-motion";
 import {
   COVER_OPEN_DEGREES,
+  COVER_TURN_SECONDS,
   DURATION,
   PAPER_EASE,
   SPRING,
-  STRIP_COUNT,
-  STRIP_WEIGHTS,
-  STRIP_WIDTH_PX,
-  SHADE_MIN,
-  SHADE_STEP,
-  COVER_TURN_SECONDS,
 } from "@/lib/motion";
 
 /**
  * 앨범 표지 한 장.
  *
- * 예전에는 표지가 div 하나였고 그걸 통째로 155도 돌렸다. 판이 뻣뻣하게 젖혀지는
- * 움직임이라 종이로 보이지 않았다. 지금은 표지를 세로 10조각으로 나누고 각 조각을
- * 앞 조각 안에 넣어(중첩), 조각마다 조금씩만 더 꺾이게 한다. 꺾임이 누적되면서
- * 전체가 곡면이 되고, 바깥쪽 조각에 각도를 몰아줘서 손끝이 잡은 종이처럼 말린다.
+ * 표지를 세로 조각으로 쪼개 곡률을 만드는 방식을 먼저 시도했다가 되돌렸다. 표지 폭이
+ * 118px이라 조각 하나가 6.5px밖에 안 되고, 브라우저가 요소 경계와 배경 위치를 기기
+ * 픽셀에 맞춰 반올림하는 데다 조각마다 `backface-visibility`로 별도 레이어가 생겨
+ * 따로 래스터화된다. 그래서 조각 경계마다 머리카락 굵기의 이음매가 남아 표지에 세로선이
+ * 그어졌다. 조각 수를 10에서 18로 바꿔봐도 줄의 간격만 달라질 뿐 사라지지 않았다.
+ * 이 크기에서 기하학적 곡률은 어차피 거의 보이지 않으므로, 지금은 이음매가 생길 수 없는
+ * 한 장짜리 표지를 쓰고 종이의 느낌은 전부 빛과 그늘로 만든다.
  *
- * 중첩 구조라 각 조각은 부모의 오른쪽 끝(left: 100%)에 붙고 부모와 같은 폭을 가진다.
- * 표지 그림(가죽결·책등 명암)은 조각마다 `background-size: 1000%`로 늘린 뒤 자기 몫의
- * 위치만 잘라 쓰므로, 펴져 있을 때는 이음매 없이 한 장으로 보인다.
- *
- * 조각(`.book-strip`)은 회전만 담당하는 투명한 그릇이고, 실제로 보이는 면은 그 안의
- * 앞면(`.book-strip-face`)과 뒷면(`.book-strip-back`)이다. 조각 자체에 backface를
- * 숨기면 90도를 넘는 순간 자식 조각까지 통째로 사라지기 때문에 면을 따로 둔다.
+ * 종이로 읽히게 하는 실제 단서 세 가지:
+ *  - 오버슛 없는 감속(spring 금지) — 종이는 되튀지 않는다
+ *  - 회전에 따라 표면을 훑고 지나가는 광택과, 경첩 쪽부터 짙어지는 그늘
+ *  - 넘어가는 동안 아주 살짝 눌리는 가로 폭(휘어질 때 투영 폭이 줄어드는 것)
  */
 export function BookCover({
   opening,
@@ -41,121 +36,70 @@ export function BookCover({
   dateLabel: string;
   photoCount: number;
 }) {
+  const turn = { duration: COVER_TURN_SECONDS, ease: PAPER_EASE };
+
   return (
     <div className="book-cover-root">
-      {/* 닫혀 있는 동안에는 조각을 만들지 않는다. 넘어갈 때만 조각으로 바꾼다. */}
-      {opening ? (
-        buildStrip(0)
-      ) : (
-        // 마우스 환경의 프리뷰 — 표지가 책등을 축으로 3~5도만 들린다(스킬 명세).
-        <motion.span
-          className="book-cover-flat"
-          aria-hidden="true"
-          whileHover={{ rotateY: -5 }}
-          transition={SPRING}
-        />
-      )}
-
-      {/* 제목·날짜·장수 판.
-          조각 트리 **밖**에 둔다. 예전에 첫 조각 안에 넣었더니 나머지 9조각이 그 자식으로
-          라벨 위에 겹쳐 그려져, 책장에서 앨범을 구분할 수 없게 되는 회귀가 났다. 여기에
-          두면 어떤 조각도 이 판을 덮을 수 없다(translateZ로 조각들보다 앞에 세운다).
-          넘어가기 시작하면 첫 조각과 같은 각도로 살짝 기울면서 빠르게 사라진다. */}
       <motion.div
-        className="book-cover-plate"
-        // z-index는 조각 전체(최대 10)보다 위. 그리고 앞으로 세우는 값(z)은 반드시
-        // framer가 관리하는 transform 안에 있어야 한다. CSS에 translateZ를 써두면
-        // framer가 rotateY를 인라인 transform으로 덮어쓸 때 통째로 지워진다 —
-        // 라벨이 조각과 같은 평면에 남아 가려졌던 원인이 이것이었다.
-        style={{ zIndex: 50, z: 0.8 }}
+        className="book-cover-turn"
         initial={false}
         animate={{
-          opacity: opening ? 0 : 1,
-          rotateY: opening ? -STRIP_WEIGHTS[0] * COVER_OPEN_DEGREES : 0,
-          z: 0.8,
+          rotateY: opening ? -COVER_OPEN_DEGREES : 0,
+          scaleX: opening ? 0.97 : 1,
         }}
-        transition={
-          opening
-            ? { duration: DURATION.fast, ease: PAPER_EASE }
-            : { duration: DURATION.base, ease: PAPER_EASE }
-        }
+        whileHover={opening ? undefined : { rotateY: -5 }}
+        transition={opening ? turn : SPRING}
       >
-        <span className="book-label">
-          <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
-            {title}
-          </span>
-        </span>
-        <span className="text-[10px] text-white/75">{dateLabel}</span>
-        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
-          사진 {photoCount}장
-        </span>
-        <span className="book-cover-sheen" aria-hidden="true" />
-      </motion.div>
-    </div>
-  );
-
-  function buildStrip(index: number): React.ReactNode {
-    const degrees = STRIP_WEIGHTS[index] * COVER_OPEN_DEGREES;
-    const delay = index * 0.018;
-    const turn = {
-      duration: COVER_TURN_SECONDS,
-      ease: PAPER_EASE,
-      delay,
-    };
-
-    return (
-      <motion.div
-        className={index === 0 ? "book-strip book-strip-first" : "book-strip"}
-        style={{ zIndex: STRIP_COUNT - index }}
-        // 조각은 탭한 순간에 비로소 생성되므로, 시작점을 "아직 안 넘어간 상태"로 명시해야
-        // 한다. `initial={false}`를 쓰면 framer가 마운트 시 목표 각도로 곧장 점프해버려서
-        // 반쯤 넘어간 정지 화면만 보이고 넘김이 통째로 사라진다.
-        initial={{ rotateY: 0 }}
-        animate={{ rotateY: -degrees }}
-        transition={turn}
-      >
-        <span
-          className="book-strip-face"
-          style={
-            {
-              "--strip-x": `${-index * STRIP_WIDTH_PX}px`,
-              "--strip-slice": `${(index / (STRIP_COUNT - 1)) * 100}%`,
-            } as React.CSSProperties
-          }
-          aria-hidden="true"
-        >
-          {/* 조각이 꺾인 만큼 어두워지는 음영 — 곡면을 눈으로 읽게 하는 실제 단서.
-              바깥쪽 조각일수록 빛에서 멀어지므로 더 짙게 깔린다. */}
+        {/* 앞면 — 가죽 표지 */}
+        <span className="book-cover-face" aria-hidden="true">
+          {/* 회전에 따라 표면을 훑는 광택. 넘어가는 동안 왼쪽에서 오른쪽으로 지나간다 */}
           <motion.span
-            className="book-strip-shade"
-            // 조각 안에서 농도가 변하고, 다음 조각이 이 조각의 끝 농도에서 이어받는다.
-            // 그늘 자체는 0에서 1로 켜지기만 하므로 계단이 생기지 않는다.
-            style={
-              {
-                "--shade-from": SHADE_MIN + index * SHADE_STEP,
-                "--shade-to": SHADE_MIN + (index + 1) * SHADE_STEP,
-              } as React.CSSProperties
-            }
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={turn}
+            className="book-cover-gloss"
+            initial={false}
+            animate={{
+              backgroundPositionX: opening ? "160%" : "-60%",
+              opacity: opening ? 0.85 : 0.3,
+            }}
+            transition={opening ? turn : SPRING}
+          />
+          {/* 경첩 쪽부터 짙어지는 그늘 — 평면을 곡면으로 읽게 만드는 주된 단서 */}
+          <motion.span
+            className="book-cover-shade"
+            initial={false}
+            animate={{ opacity: opening ? 1 : 0 }}
+            transition={opening ? turn : SPRING}
           />
         </span>
 
-        {/* 넘어간 표지의 안쪽 — 마블링 면지. 90도를 넘어가면 이 면이 보인다 */}
-        <span
-          className="book-strip-back"
-          style={
-            {
-              "--strip-x": `${index * STRIP_WIDTH_PX}px`,
-              "--strip-slice": `${100 - (index / (STRIP_COUNT - 1)) * 100}%`,
-            } as React.CSSProperties
-          }
-          aria-hidden="true"
-        />
+        {/* 뒷면 — 넘어간 표지의 안쪽(양피지 면지) */}
+        <span className="book-cover-verso" aria-hidden="true" />
 
-        {index + 1 < STRIP_COUNT && buildStrip(index + 1)}
+        {/* 제목·날짜·장수 판. 표지와 함께 회전하되 앞으로 세워(z) 가려지지 않게 한다.
+            앞으로 세우는 값은 반드시 framer가 관리하는 transform 안에 있어야 한다 —
+            CSS에 translateZ를 써두면 framer가 transform을 다시 쓸 때 통째로 지워진다. */}
+        <motion.div
+          className="book-cover-plate"
+          style={{ zIndex: 50, z: 0.8 }}
+          initial={false}
+          animate={{ opacity: opening ? 0 : 1, z: 0.8 }}
+          transition={
+            opening
+              ? { duration: DURATION.fast, ease: PAPER_EASE }
+              : { duration: DURATION.base, ease: PAPER_EASE }
+          }
+        >
+          <span className="book-label">
+            <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
+              {title}
+            </span>
+          </span>
+          <span className="text-[10px] text-white/75">{dateLabel}</span>
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
+            사진 {photoCount}장
+          </span>
+          <span className="book-cover-sheen" aria-hidden="true" />
+        </motion.div>
       </motion.div>
-    );
-  }
+    </div>
+  );
 }
