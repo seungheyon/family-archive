@@ -8,6 +8,7 @@ import {
   SPRING,
   STRIP_COUNT,
   STRIP_WEIGHTS,
+  STRIP_WIDTH_PX,
 } from "@/lib/motion";
 
 /**
@@ -37,7 +38,41 @@ export function BookCover({
   dateLabel: string;
   photoCount: number;
 }) {
-  return <div className="book-cover-root">{buildStrip(0)}</div>;
+  return (
+    <div className="book-cover-root">
+      {buildStrip(0)}
+
+      {/* 제목·날짜·장수 판.
+          조각 트리 **밖**에 둔다. 예전에 첫 조각 안에 넣었더니 나머지 9조각이 그 자식으로
+          라벨 위에 겹쳐 그려져, 책장에서 앨범을 구분할 수 없게 되는 회귀가 났다. 여기에
+          두면 어떤 조각도 이 판을 덮을 수 없다(translateZ로 조각들보다 앞에 세운다).
+          넘어가기 시작하면 첫 조각과 같은 각도로 살짝 기울면서 빠르게 사라진다. */}
+      <motion.div
+        className="book-cover-plate"
+        initial={false}
+        animate={{
+          opacity: opening ? 0 : 1,
+          rotateY: opening ? -STRIP_WEIGHTS[0] * COVER_OPEN_DEGREES : 0,
+        }}
+        transition={
+          opening
+            ? { duration: DURATION.fast, ease: PAPER_EASE }
+            : { duration: DURATION.base, ease: PAPER_EASE }
+        }
+      >
+        <span className="book-label">
+          <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
+            {title}
+          </span>
+        </span>
+        <span className="text-[10px] text-white/75">{dateLabel}</span>
+        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
+          사진 {photoCount}장
+        </span>
+        <span className="book-cover-sheen" aria-hidden="true" />
+      </motion.div>
+    </div>
+  );
 
   function buildStrip(index: number): React.ReactNode {
     const degrees = STRIP_WEIGHTS[index] * COVER_OPEN_DEGREES;
@@ -61,9 +96,12 @@ export function BookCover({
       >
         <span
           className="book-strip-face"
-          style={{
-            backgroundPosition: `${(index / (STRIP_COUNT - 1)) * 100}% 0`,
-          }}
+          style={
+            {
+              "--strip-x": `${-index * STRIP_WIDTH_PX}px`,
+              "--strip-slice": `${(index / (STRIP_COUNT - 1)) * 100}%`,
+            } as React.CSSProperties
+          }
           aria-hidden="true"
         >
           {/* 조각이 꺾인 만큼 어두워지는 음영 — 곡면을 눈으로 읽게 하는 실제 단서.
@@ -79,35 +117,14 @@ export function BookCover({
         {/* 넘어간 표지의 안쪽 — 마블링 면지. 90도를 넘어가면 이 면이 보인다 */}
         <span
           className="book-strip-back"
-          style={{
-            backgroundPosition: `${100 - (index / (STRIP_COUNT - 1)) * 100}% 0`,
-          }}
+          style={
+            {
+              "--strip-x": `${index * STRIP_WIDTH_PX}px`,
+              "--strip-slice": `${100 - (index / (STRIP_COUNT - 1)) * 100}%`,
+            } as React.CSSProperties
+          }
           aria-hidden="true"
         />
-
-        {index === 0 && (
-          <motion.span
-            className="book-cover-plate"
-            initial={false}
-            animate={{ opacity: opening ? 0 : 1 }}
-            transition={
-              opening
-                ? { duration: DURATION.fast, ease: PAPER_EASE }
-                : { duration: DURATION.base, ease: PAPER_EASE }
-            }
-          >
-            <span className="book-label">
-              <span className="line-clamp-3 text-center text-xs font-semibold leading-tight">
-                {title}
-              </span>
-            </span>
-            <span className="text-[10px] text-white/75">{dateLabel}</span>
-            <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
-              사진 {photoCount}장
-            </span>
-            <span className="book-cover-sheen" aria-hidden="true" />
-          </motion.span>
-        )}
 
         {index + 1 < STRIP_COUNT && buildStrip(index + 1)}
       </motion.div>

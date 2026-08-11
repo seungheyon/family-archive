@@ -42,6 +42,12 @@ export const SPRING_SLOW: Transition = {
  */
 export const PAPER_EASE = [0.22, 0.61, 0.36, 1] as const;
 
+/**
+ * 조각 하나의 실제 폭(px). `.book-stage`의 고정 폭 118px을 조각 수로 나눈 값이다.
+ * 가죽결 무늬를 조각 경계에서 이어붙일 때 이만큼씩 밀어야 이음매가 보이지 않는다.
+ */
+export const STRIP_WIDTH_PX = 11.8;
+
 /** 표지를 세로로 몇 조각 내어 곡면을 근사할지 */
 export const STRIP_COUNT = 10;
 

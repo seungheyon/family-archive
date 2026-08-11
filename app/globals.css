@@ -452,8 +452,20 @@ body {
     position: absolute;
     inset: 0;
     backface-visibility: hidden;
-    background-size: 1000% 100%;
-    background-repeat: no-repeat;
+    /*
+      레이어마다 다르게 다룬다.
+      - 가죽결/마블링(앞의 두 레이어): 원래 크기로 타일링하고, 조각 번호만큼 왼쪽으로
+        밀어 이웃 조각과 무늬를 이어붙인다. 여기까지 10배로 늘리면 고운 결이 굵은
+        세로 줄무늬로 뭉개진다.
+      - 책등 명암(마지막 레이어): 표지 전체를 가로지르는 그라디언트라 10배로 늘린 뒤
+        조각별로 자기 몫만 잘라 쓴다.
+    */
+    background-size: auto, auto, 1000% 100%;
+    background-position:
+      var(--strip-x) 0,
+      var(--strip-x) 0,
+      var(--strip-slice) 0;
+    background-repeat: repeat, repeat, no-repeat;
   }
 
   .book-strip-face {
@@ -544,10 +556,12 @@ body {
      표지 전체 폭으로 펼쳐두고, 넘어가기 시작하면 곧바로 사라진다. */
   .book-cover-plate {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 1000%;
-    height: 100%;
+    inset: 0;
+    /* 조각들보다 물리적으로 앞에 세운다 — 겹침 순서를 DOM 순서나 z-index에 맡기면
+       3D 컨텍스트 안에서 다시 가려질 수 있다 */
+    transform-origin: left center;
+    transform: translateZ(0.8px);
+    border-radius: 2px 7px 7px 2px;
     display: flex;
     flex-direction: column;
     align-items: center;
