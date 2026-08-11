@@ -40,7 +40,8 @@ export function BookCover({
 }) {
   return (
     <div className="book-cover-root">
-      {buildStrip(0)}
+      {/* 닫혀 있는 동안에는 조각을 만들지 않는다. 넘어갈 때만 조각으로 바꾼다. */}
+      {opening ? buildStrip(0) : <span className="book-cover-flat" aria-hidden="true" />}
 
       {/* 제목·날짜·장수 판.
           조각 트리 **밖**에 둔다. 예전에 첫 조각 안에 넣었더니 나머지 9조각이 그 자식으로

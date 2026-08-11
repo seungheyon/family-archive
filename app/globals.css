@@ -468,7 +468,8 @@ body {
     background-repeat: repeat, repeat, no-repeat;
   }
 
-  .book-strip-face {
+  .book-strip-face,
+  .book-cover-flat {
     color: #fff;
     background-color: var(--book-color, #7a4a3a);
     background-image:
@@ -510,6 +511,27 @@ body {
   }
 
   .book-strip-first > .book-strip-face {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.35),
+      5px 8px 14px rgba(0, 0, 0, 0.45);
+  }
+
+  /*
+    닫혀 있는 표지 = 조각 없는 한 장.
+    조각 구조는 넘어갈 때만 필요한데 예전에는 책장의 모든 책이 항상 10조각을 들고 있었다.
+    책 8권이면 조각 80개, 앞뒷면까지 240여 개가 `will-change`/`backface-visibility`로
+    GPU 레이어를 물고 있어 책장 진입과 스크롤이 그만큼 무거워졌다. 탭한 책만 조각으로
+    바꾸면 되고, 펴져 있을 때의 그림은 이 한 장과 조각 10장이 서로 구분되지 않는다.
+  */
+  .book-cover-flat {
+    position: absolute;
+    inset: 0;
+    border-radius: 2px 7px 7px 2px;
+    backface-visibility: hidden;
+    background-size: auto, auto, 100% 100%;
+    background-position: 0 0, 0 0, 0 0;
+    background-repeat: repeat, repeat, no-repeat;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
       inset 0 -2px 4px rgba(0, 0, 0, 0.35),
