@@ -49,10 +49,16 @@ export function BookCover({
           넘어가기 시작하면 첫 조각과 같은 각도로 살짝 기울면서 빠르게 사라진다. */}
       <motion.div
         className="book-cover-plate"
+        // z-index는 조각 전체(최대 10)보다 위. 그리고 앞으로 세우는 값(z)은 반드시
+        // framer가 관리하는 transform 안에 있어야 한다. CSS에 translateZ를 써두면
+        // framer가 rotateY를 인라인 transform으로 덮어쓸 때 통째로 지워진다 —
+        // 라벨이 조각과 같은 평면에 남아 가려졌던 원인이 이것이었다.
+        style={{ zIndex: 50, z: 0.8 }}
         initial={false}
         animate={{
           opacity: opening ? 0 : 1,
           rotateY: opening ? -STRIP_WEIGHTS[0] * COVER_OPEN_DEGREES : 0,
+          z: 0.8,
         }}
         transition={
           opening
