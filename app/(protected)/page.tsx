@@ -12,6 +12,7 @@ import { isAdmin } from "@/lib/auth";
 import {
   buildAlbumDateRanges,
   formatDateRange,
+  resolveAlbumDates,
   type PhotoDateRow,
 } from "@/lib/albumDates";
 
@@ -22,6 +23,10 @@ export const metadata: Metadata = {
 interface AlbumRow {
   id: string;
   title: string;
+  date_start: string | null;
+  date_end: string | null;
+  dates_manual: boolean | null;
+  date_precision: string | null;
   photos: { count: number }[];
 }
 
@@ -50,7 +55,9 @@ export default async function AlbumListPage({
     await Promise.all([
       supabase
         .from("albums")
-        .select("id, title, photos(count)")
+        .select(
+          "id, title, date_start, date_end, dates_manual, date_precision, photos(count)",
+        )
         .returns<AlbumRow[]>(),
       supabase
         .from("photos")
@@ -64,7 +71,18 @@ export default async function AlbumListPage({
         .returns<PhotoDateRow[]>(),
     ]);
 
-  const dateRanges = buildAlbumDateRanges(photoDates ?? []);
+  const computedRanges = buildAlbumDateRanges(photoDates ?? []);
+
+  // 사람이 직접 지정한 기간이 있으면 그것이 이긴다(lib/albumDates.resolveAlbumDates)
+  const dates = new Map(
+    (albums ?? []).map((a) => [
+      a.id,
+      resolveAlbumDates(a, computedRanges.get(a.id)),
+    ]),
+  );
+  const dateRanges = new Map(
+    [...dates].flatMap(([id, d]) => (d ? [[id, d.range] as const] : [])),
+  );
 
   // 빈 앨범도 목록에 노출한다 — 예전엔 사진 0장인 앨범을 숨겼는데, 그러면 들어갈 수가 없어서
   // 사진을 넣지도 지우지도 못하는 상태가 됐다.
@@ -95,15 +113,22 @@ export default async function AlbumListPage({
         <div className="bookshelf">
           <div className="bookshelf-grid">
             {sortedAlbums.map((album, i) => {
-              const range = dateRanges.get(album.id);
+              const resolved = dates.get(album.id) ?? null;
               return (
                 <BookSpine
                   key={album.id}
                   albumId={album.id}
                   title={album.title}
-                  dateLabel={range ? formatDateRange(range) : "날짜 없음"}
+                  dateLabel={
+                    resolved
+                      ? formatDateRange(resolved.range, resolved.precision)
+                      : "날짜 없음"
+                  }
                   photoCount={album.photos?.[0]?.count ?? 0}
                   coverColor={BOOK_COLORS[i % BOOK_COLORS.length]}
+                  dateStart={resolved?.range.start ?? ""}
+                  dateEnd={resolved?.range.end ?? ""}
+                  datePrecision={resolved?.precision ?? "day"}
                 />
               );
             })}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import { SPRING, SPRING_SLOW, tiltFromPointer } from "@/lib/motion";
 import { BookCover } from "@/components/BookCover";
+import { AlbumCoverEditor } from "@/components/AlbumCoverEditor";
 
 /**
  * 책장에 꽂힌 책 한 권(앨범 하나).
@@ -19,16 +20,48 @@ export function BookSpine({
   dateLabel,
   photoCount,
   coverColor,
+  dateStart,
+  dateEnd,
+  datePrecision,
 }: {
   albumId: string;
   title: string;
   dateLabel: string;
   photoCount: number;
   coverColor: string;
+  dateStart: string;
+  dateEnd: string;
+  datePrecision: "day" | "month";
 }) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<"closed" | "opening">("closed");
+  const [editing, setEditing] = useState(false);
+
+  // 롱프레스로 편집을 열 때, 손을 뗀 뒤 따라오는 click이 앨범을 열어버리지 않도록 막는다
+  const pressTimer = useRef<number | null>(null);
+  const longPressed = useRef(false);
+
+  function startPress() {
+    longPressed.current = false;
+    pressTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      openEditor();
+    }, 500);
+  }
+
+  function cancelPress() {
+    if (pressTimer.current !== null) {
+      window.clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  }
+
+  function openEditor() {
+    cancelPress();
+    resetTilt();
+    setEditing(true);
+  }
 
   // 커서 근접 시의 미세 틸트 — 스프링을 통과시켜 손맛이 나게 한다
   const rotateX = useSpring(useMotionValue(0), SPRING);
@@ -47,7 +80,12 @@ export function BookSpine({
   }
 
   function open() {
-    if (phase !== "closed") return;
+    if (phase !== "closed" || editing) return;
+    // 롱프레스로 편집을 연 직후의 click은 무시한다
+    if (longPressed.current) {
+      longPressed.current = false;
+      return;
+    }
     resetTilt();
     setPhase("opening");
     // 이동을 즉시 시작하고 표지 열림은 그 위에서 계속 재생한다. 예전에는 열림이 끊겨
@@ -89,6 +127,19 @@ export function BookSpine({
         }
         transition={phase === "opening" ? SPRING_SLOW : SPRING}
         onClick={open}
+        // 길게 누르면(터치) / 우클릭하면(마우스) 표지 편집을 연다
+        onTouchStart={startPress}
+        onTouchEnd={cancelPress}
+        onTouchMove={cancelPress}
+        onMouseDown={(e) => {
+          if (e.button === 0) startPress();
+        }}
+        onMouseUp={cancelPress}
+        onMouseLeave={cancelPress}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          openEditor();
+        }}
         role="link"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -102,7 +153,7 @@ export function BookSpine({
             표지보다 뒤에 깔려 있다가 넘어가면서 드러난다. */}
         <div className="book-endpaper" aria-hidden="true" />
 
-        {/* 표지 — 책등을 회전축으로, 조각별 곡률을 가지고 넘어간다 */}
+        {/* 표지 — 책등을 회전축으로 넘어간다 */}
         <BookCover
           opening={phase === "opening"}
           title={title}
@@ -110,6 +161,18 @@ export function BookSpine({
           photoCount={photoCount}
         />
       </motion.div>
+
+      {editing && (
+        <AlbumCoverEditor
+          albumId={albumId}
+          coverColor={coverColor}
+          initialTitle={title}
+          initialStart={dateStart}
+          initialEnd={dateEnd}
+          initialPrecision={datePrecision}
+          onClose={() => setEditing(false)}
+        />
+      )}
     </div>
   );
 }

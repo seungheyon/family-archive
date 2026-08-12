@@ -48,8 +48,53 @@ export function formatDate(iso: string) {
   return `${y}.${m}.${d}`;
 }
 
-export function formatDateRange(range: DateRange) {
-  return range.start === range.end
-    ? formatDate(range.start)
-    : `${formatDate(range.start)} ~ ${formatDate(range.end)}`;
+export function formatMonth(iso: string) {
+  const [y, m] = iso.split("-");
+  return `${y}.${m}`;
+}
+
+/** 사람이 직접 지정한 기간의 정밀도. 날짜가 확실치 않을 때 월까지만 고를 수 있다 */
+export type DatePrecision = "day" | "month";
+
+export function formatDateRange(
+  range: DateRange,
+  precision: DatePrecision = "day",
+) {
+  const fmt = precision === "month" ? formatMonth : formatDate;
+  const start = fmt(range.start);
+  const end = fmt(range.end);
+  return start === end ? start : `${start} ~ ${end}`;
+}
+
+/**
+ * 화면에 보여줄 기간을 고른다.
+ *
+ * 사람이 직접 지정한 값이 있으면 그것이 이긴다. 없으면 지금까지처럼 사진에서 계산한 값을
+ * 쓴다 — 자동분류가 채워둔 `date_start`는 사용자가 만든 앨범에서 비어 있고 사진을 옮기면
+ * 실제와 어긋나서, 사람이 손대지 않은 앨범에서는 계속 신뢰하지 않는다.
+ */
+export function resolveAlbumDates(
+  album: {
+    date_start: string | null;
+    date_end: string | null;
+    dates_manual: boolean | null;
+    date_precision: string | null;
+  },
+  computed: DateRange | undefined,
+): { range: DateRange; precision: DatePrecision } | null {
+  if (album.dates_manual && album.date_start && album.date_end) {
+    return {
+      range: { start: album.date_start, end: album.date_end },
+      precision: album.date_precision === "month" ? "month" : "day",
+    };
+  }
+  return computed ? { range: computed, precision: "day" } : null;
+}
+
+/** 월 단위로 고른 경우 그 달의 1일 / 말일로 채운다(정렬·기념일 판정은 계속 날짜로 동작) */
+export function monthToRangeEdges(month: string): { start: string; end: string } {
+  const [y, m] = month.split("-").map(Number);
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const mm = String(m).padStart(2, "0");
+  return { start: `${y}-${mm}-01`, end: `${y}-${mm}-${String(last).padStart(2, "0")}` };
 }
